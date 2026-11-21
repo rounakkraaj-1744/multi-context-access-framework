@@ -1,0 +1,15 @@
+# Cryptographic safeguards audit
+
+Source inspection and existing isolated tests (31/31 pass). Research evaluation did not open the production database or use credentials.
+
+| Safeguard | Status | Actual construction and evidence | Test/result | Limitation |
+|---|---|---|---|---|
+| Signed device-registration tokens | Not implemented | No device token creation/signing/verification in lib/ or app/api/ | No token path to test | No algorithm, keys, expiry, or device/user binding |
+| Integrity-protected session tokens | Implemented and verified | lib/auth.ts:createSession generates 32 random bytes, base64url cookie; only SHA-256 digest stored. currentActor hashes presented token and looks it up. Cookie HttpOnly/SameSite=Lax; Secure only in production; eight-hour expiry; DB supports logout/revoke/expiry | Existing authentication/session tests pass | Opaque random bearer token protected by database digest, not signed/MACed. HTTPS depends on deployment infrastructure |
+| Salted password hashing | Implemented and verified | bcryptjs.hashSync(password,12) in registration and seed; bcrypt generates salt; compareSync validates | Existing login/step-up integration tests pass | No rehash/migration policy. Test fixtures use cost factor 4; application path uses 12 |
+| TLS | Implemented but unverified | Cookie Secure flag is production-mode gated; no proxy/server deployment configuration in repository | No deployment or certificate check possible | HTTPS enforcement cannot be claimed |
+| SHA-256 audit hash chain | Not implemented | lib/db.ts:audit appends ordinary audit_events rows; no hash, previous hash, canonical serialization, or verifier | Tamper trials not applicable; raw-results/audit-checks.json records status | No tampering detection. A future hash chain alone would not anchor latest-tail truncation |
+
+## Requested tampering checks
+
+Modification of an existing record, previous hash, intermediate deletion, reordering, and latest-tail truncation cannot be tested against a production chain because none exists. They are recorded as not applicable in raw-results/audit-checks.json. Ordinary SQLite audit rows can be altered or removed by an actor with write access without cryptographic evidence.

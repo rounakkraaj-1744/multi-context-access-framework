@@ -1,0 +1,96 @@
+{
+  "seed": 1,
+  "instancesPerFamily": 2,
+  "families": [
+    [
+      "S1",
+      "Registered device, expected window, corporate network",
+      "benign",
+      "ALLOW",
+      "Both"
+    ],
+    [
+      "S2",
+      "Stolen credential from a new device on an unknown network",
+      "violating",
+      "VERIFY or DENY by sensitivity",
+      "Environmental"
+    ],
+    [
+      "S3",
+      "Legitimate user on a replacement device",
+      "benign",
+      "VERIFY (accepted friction)",
+      "Environmental"
+    ],
+    [
+      "S4",
+      "Unfamiliar network with a known device",
+      "mixed",
+      "VERIFY",
+      "Environmental"
+    ],
+    [
+      "S5",
+      "Request outside the configured time window",
+      "mixed",
+      "VERIFY (L); DENY if hard (H)",
+      "Environmental"
+    ],
+    [
+      "S6",
+      "Sudden burst of requests (scripted extraction)",
+      "violating",
+      "VERIFY or DENY",
+      "Behavioral"
+    ],
+    [
+      "S7",
+      "Resource outside the user's baseline permissions",
+      "violating",
+      "DENY by baseline (all systems)",
+      "Baseline"
+    ],
+    [
+      "S8",
+      "Change in navigation or resource-access pattern",
+      "mixed",
+      "VERIFY",
+      "Behavioral"
+    ],
+    [
+      "S9",
+      "Conflicting signals (e.g., known device but inconsistent region)",
+      "mixed",
+      "VERIFY (L); DENY (H) via status X",
+      "Both"
+    ],
+    [
+      "S10",
+      "Missing or stale context (PIP outage, stale token)",
+      "mixed",
+      "VERIFY (L); DENY (H)",
+      "Both"
+    ],
+    [
+      "S11",
+      "Legitimate user whose circumstances changed (new project, emergency)",
+      "benign",
+      "VERIFY (accepted friction)",
+      "Behavioral"
+    ],
+    [
+      "S12",
+      "Mimic reproducing normal context and behavior",
+      "violating",
+      "ALLOW (residual risk, reported)",
+      "Both"
+    ]
+  ],
+  "degradationRates": [
+    0,
+    0.1,
+    0.2,
+    0.4
+  ]
+}

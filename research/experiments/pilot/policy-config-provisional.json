@@ -1,0 +1,53 @@
+{
+  "configId": "mcac-phase2-provisional-pilot-v1",
+  "parameters": {
+    "workHours": [
+      9,
+      17
+    ],
+    "allowedNetworks": [
+      "corporate",
+      "vpn",
+      "known"
+    ],
+    "frequencyLimits": {
+      "corporate": 20,
+      "vpn": 10,
+      "known": 5,
+      "unknown": 1
+    },
+    "historyNoveltyMinimum": 1,
+    "expectedTransitionMinimum": 1,
+    "freshnessSeconds": 300,
+    "verificationRequiredItems": [
+      "time",
+      "location",
+      "network",
+      "device",
+      "session",
+      "frequency",
+      "history",
+      "navigation",
+      "request"
+    ],
+    "mimicVerificationFailureProbability": 0.5,
+    "unresolved": [
+      "S9 same-category Γ semantics",
+      "mimic-verification probability",
+      "calibration objective and parameter-search space"
+    ]
+  },
+  "decisionsRequired": [
+    "S9 Γ semantics",
+    "mimic-verification probability",
+    "calibration objective/search space"
+  ],
+  "systems": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6"
+  ]
+}

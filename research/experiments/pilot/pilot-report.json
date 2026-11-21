@@ -1,0 +1,565 @@
+{
+  "status": "FAIL",
+  "gate": "pilot must pass before test-seed evaluation",
+  "config": {
+    "schemaVersion": 1,
+    "configId": "mcac-phase2-provisional-pilot-v1",
+    "policyVersion": "pilot-provisional-v1",
+    "generatedAt": "2026-11-16T14:57:19.785Z",
+    "seeds": {
+      "calibration": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "test": [
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130
+      ]
+    },
+    "instancesPerFamily": 250,
+    "testFamilies": 12,
+    "degradationRates": [
+      0,
+      0.1,
+      0.2,
+      0.4
+    ],
+    "pilot": {
+      "instancesPerFamily": 2,
+      "latencyWarmups": 2,
+      "latencySamples": 4,
+      "runs": 1
+    },
+    "parameters": {
+      "workHours": [
+        9,
+        17
+      ],
+      "allowedNetworks": [
+        "corporate",
+        "vpn",
+        "known"
+      ],
+      "frequencyLimits": {
+        "corporate": 20,
+        "vpn": 10,
+        "known": 5,
+        "unknown": 1
+      },
+      "historyNoveltyMinimum": 1,
+      "expectedTransitionMinimum": 1,
+      "freshnessSeconds": 300,
+      "verificationRequiredItems": [
+        "time",
+        "location",
+        "network",
+        "device",
+        "session",
+        "frequency",
+        "history",
+        "navigation",
+        "request"
+      ],
+      "mimicVerificationFailureProbability": 0.5,
+      "unresolved": [
+        "S9 same-category Γ semantics",
+        "mimic-verification probability",
+        "calibration objective and parameter-search space"
+      ]
+    },
+    "decisionsRequired": [
+      "S9 Γ semantics",
+      "mimic-verification probability",
+      "calibration objective/search space"
+    ],
+    "status": "PROVISIONAL_PILOT_ONLY"
+  },
+  "pilotSeed": 1,
+  "generatedRequestCount": 24,
+  "evaluatedRowCount": 144,
+  "checks": {
+    "all twelve families generated": {
+      "passed": true,
+      "evidence": {
+        "count": 12,
+        "families": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12"
+        ]
+      }
+    },
+    "S7 baseline denial": {
+      "passed": true,
+      "evidence": [
+        [
+          "B1",
+          "DENY"
+        ],
+        [
+          "B2",
+          "DENY"
+        ],
+        [
+          "B3",
+          "DENY"
+        ],
+        [
+          "B4",
+          "DENY"
+        ],
+        [
+          "B5",
+          "DENY"
+        ],
+        [
+          "B6",
+          "DENY"
+        ],
+        [
+          "B1",
+          "DENY"
+        ],
+        [
+          "B2",
+          "DENY"
+        ],
+        [
+          "B3",
+          "DENY"
+        ],
+        [
+          "B4",
+          "DENY"
+        ],
+        [
+          "B5",
+          "DENY"
+        ],
+        [
+          "B6",
+          "DENY"
+        ]
+      ]
+    },
+    "labels independent with both counterfactual classes": {
+      "passed": true,
+      "evidence": {
+        "benignDeviant": true,
+        "violatingNormal": true
+      }
+    },
+    "B1/B2 distinguish static environmental policy": {
+      "passed": true,
+      "evidence": [
+        [
+          "B1",
+          "ALLOW"
+        ],
+        [
+          "B2",
+          "DENY"
+        ],
+        [
+          "B1",
+          "ALLOW"
+        ],
+        [
+          "B2",
+          "DENY"
+        ]
+      ]
+    },
+    "B3/B5 distinguish behavioral ablation": {
+      "passed": true,
+      "evidence": [
+        [
+          "B3",
+          "ALLOW"
+        ],
+        [
+          "B5",
+          "VERIFY"
+        ],
+        [
+          "B3",
+          "ALLOW"
+        ],
+        [
+          "B5",
+          "VERIFY"
+        ]
+      ]
+    },
+    "B4/B5 distinguish environmental ablation": {
+      "passed": true,
+      "evidence": [
+        [
+          "B4",
+          "ALLOW"
+        ],
+        [
+          "B5",
+          "VERIFY"
+        ],
+        [
+          "B4",
+          "ALLOW"
+        ],
+        [
+          "B5",
+          "VERIFY"
+        ]
+      ]
+    },
+    "B5/B6 distinguish interaction threshold": {
+      "passed": true,
+      "evidence": {
+        "B5": "VERIFY",
+        "B6": "ALLOW"
+      }
+    },
+    "paired step-up outcomes reproducible": {
+      "passed": true,
+      "evidence": {
+        "rows": 144
+      }
+    },
+    "mimic step-up semantics": {
+      "passed": true,
+      "evidence": {
+        "pFailure": 0.5
+      }
+    },
+    "independent reference replay": {
+      "passed": true,
+      "evidence": {
+        "total": 96,
+        "matches": 96
+      }
+    },
+    "trace completeness": {
+      "passed": true,
+      "evidence": {
+        "total": 96,
+        "complete": 96
+      }
+    },
+    "degradation rates and operation balance": {
+      "passed": true,
+      "evidence": [
+        {
+          "rate": 0,
+          "seed": 24264,
+          "totalItems": 10800,
+          "degradedItems": 0,
+          "actualRate": 0,
+          "opCounts": {
+            "missing": 0,
+            "stale": 0,
+            "unverifiable": 0,
+            "contradictory": 0
+          },
+          "operationsBalanced": true,
+          "withinPilotTolerance": true
+        },
+        {
+          "rate": 0.1,
+          "seed": 24264,
+          "totalItems": 10800,
+          "degradedItems": 1134,
+          "actualRate": 0.105,
+          "opCounts": {
+            "missing": 294,
+            "stale": 292,
+            "unverifiable": 291,
+            "contradictory": 257
+          },
+          "operationsBalanced": true,
+          "withinPilotTolerance": true
+        },
+        {
+          "rate": 0.2,
+          "seed": 24264,
+          "totalItems": 10800,
+          "degradedItems": 2250,
+          "actualRate": 0.20833333333333334,
+          "opCounts": {
+            "missing": 582,
+            "stale": 582,
+            "unverifiable": 554,
+            "contradictory": 532
+          },
+          "operationsBalanced": true,
+          "withinPilotTolerance": true
+        },
+        {
+          "rate": 0.4,
+          "seed": 24264,
+          "totalItems": 10800,
+          "degradedItems": 4399,
+          "actualRate": 0.4073148148148148,
+          "opCounts": {
+            "missing": 1115,
+            "stale": 1113,
+            "unverifiable": 1097,
+            "contradictory": 1074
+          },
+          "operationsBalanced": true,
+          "withinPilotTolerance": true
+        }
+      ]
+    },
+    "hand-checkable metric fixture": {
+      "passed": true,
+      "evidence": {
+        "n": 4,
+        "benignN": 2,
+        "violatingN": 2,
+        "FAR": 0.5,
+        "FRR": 0.5,
+        "CR": 0.5,
+        "precision": 0.3333333333333333,
+        "recall": 0.5,
+        "F1": 0.4,
+        "FAR_e2e": 0.5,
+        "contextCoverage": null,
+        "traceCompleteness": null,
+        "replayFidelity": null,
+        "p50Ms": 1,
+        "p95Ms": 1,
+        "p99Ms": 1
+      }
+    },
+    "decision latency sample collection": {
+      "passed": true,
+      "evidence": "monotonic clock surrounds evaluator invocation only; collection, reference replay, step-up, metrics and persistence excluded"
+    },
+    "manuscript PEP-to-PDP latency boundary": {
+      "passed": false,
+      "evidence": {
+        "implemented": "core evaluator function only",
+        "required": "time from PEP calling PDP until decision returned",
+        "issue": "no PEP/PDP integration exists in the experimental harness; the pilot samples cannot establish the manuscript boundary"
+      }
+    }
+  },
+  "failures": [
+    "manuscript PEP-to-PDP latency boundary"
+  ],
+  "blocked": [
+    "S9 Table IX conflicting-region semantics require Γ scope clarification",
+    "mimic verification probability is unspecified",
+    "calibration objective/search domain unspecified; provisional policy cannot be frozen"
+  ],
+  "decisionStageAndEndToEndMetricsSeparated": true,
+  "perSystemPilotMetricsExcludingBlockedS9": {
+    "B1": {
+      "n": 22,
+      "benignN": 9,
+      "violatingN": 13,
+      "FAR": 0.8461538461538461,
+      "FRR": 0,
+      "CR": 0,
+      "precision": 1,
+      "recall": 0.15384615384615385,
+      "F1": 0.2666666666666667,
+      "FAR_e2e": 0.8461538461538461,
+      "contextCoverage": null,
+      "traceCompleteness": null,
+      "replayFidelity": null,
+      "p50Ms": 0.00033400000006622577,
+      "p95Ms": 0.009999999999990905,
+      "p99Ms": 0.011750000000006366
+    },
+    "B2": {
+      "n": 22,
+      "benignN": 9,
+      "violatingN": 13,
+      "FAR": 0.46153846153846156,
+      "FRR": 0.4444444444444444,
+      "CR": 0,
+      "precision": 0.6363636363636364,
+      "recall": 0.5384615384615384,
+      "F1": 0.5833333333333334,
+      "FAR_e2e": 0.46153846153846156,
+      "contextCoverage": null,
+      "traceCompleteness": null,
+      "replayFidelity": null,
+      "p50Ms": 0.0015000000000782165,
+      "p95Ms": 0.005583000000001448,
+      "p99Ms": 0.027832999999986896
+    },
+    "B3": {
+      "n": 22,
+      "benignN": 9,
+      "violatingN": 13,
+      "FAR": 0.46153846153846156,
+      "FRR": 0,
+      "CR": 0.4444444444444444,
+      "precision": 0.6363636363636364,
+      "recall": 0.5384615384615384,
+      "F1": 0.5833333333333334,
+      "FAR_e2e": 0.46153846153846156,
+      "contextCoverage": null,
+      "traceCompleteness": 1,
+      "replayFidelity": 1,
+      "p50Ms": 0.1658749999999145,
+      "p95Ms": 1.5933339999999134,
+      "p99Ms": 11.984124999999949
+    },
+    "B4": {
+      "n": 22,
+      "benignN": 9,
+      "violatingN": 13,
+      "FAR": 0.46153846153846156,
+      "FRR": 0,
+      "CR": 0.4444444444444444,
+      "precision": 0.6363636363636364,
+      "recall": 0.5384615384615384,
+      "F1": 0.5833333333333334,
+      "FAR_e2e": 0.46153846153846156,
+      "contextCoverage": null,
+      "traceCompleteness": 1,
+      "replayFidelity": 1,
+      "p50Ms": 0.15637499999991178,
+      "p95Ms": 0.5240000000000009,
+      "p99Ms": 0.6969579999999951
+    },
+    "B5": {
+      "n": 22,
+      "benignN": 9,
+      "violatingN": 13,
+      "FAR": 0.3076923076923077,
+      "FRR": 0,
+      "CR": 0.6666666666666666,
+      "precision": 0.6,
+      "recall": 0.6923076923076923,
+      "F1": 0.6428571428571429,
+      "FAR_e2e": 0.3076923076923077,
+      "contextCoverage": null,
+      "traceCompleteness": 1,
+      "replayFidelity": 1,
+      "p50Ms": 0.17708300000003874,
+      "p95Ms": 0.4499580000000378,
+      "p99Ms": 1.2976659999999356
+    },
+    "B6": {
+      "n": 22,
+      "benignN": 9,
+      "violatingN": 13,
+      "FAR": 0.3076923076923077,
+      "FRR": 0,
+      "CR": 0.6666666666666666,
+      "precision": 0.6,
+      "recall": 0.6923076923076923,
+      "F1": 0.6428571428571429,
+      "FAR_e2e": 0.3076923076923077,
+      "contextCoverage": null,
+      "traceCompleteness": 1,
+      "replayFidelity": 1,
+      "p50Ms": 0.15724999999997635,
+      "p95Ms": 0.3853749999999536,
+      "p99Ms": 1.709875000000011
+    }
+  },
+  "blockedS9Rows": 12,
+  "latencyMeasurement": {
+    "samples": {
+      "B1": [
+        0.002334000000018932,
+        0.0003749999999627107,
+        0.0007920000000467553,
+        0.00020800000004328467
+      ],
+      "B2": [
+        0.0009160000000747459,
+        0.0008749999999508873,
+        0.0007919999999330685,
+        0.0005830000000059954
+      ],
+      "B3": [
+        0.15699999999992542,
+        0.1719590000000153,
+        0.1386249999999336,
+        0.13508300000000872
+      ],
+      "B4": [
+        0.17295799999999417,
+        0.1477909999999838,
+        0.1437909999999647,
+        0.14541699999995217
+      ],
+      "B5": [
+        0.17799999999999727,
+        0.16879099999994196,
+        0.17520899999999529,
+        0.16300000000001091
+      ],
+      "B6": [
+        0.12391700000000583,
+        0.12154099999997925,
+        0.15275000000008276,
+        0.11791600000003655
+      ]
+    },
+    "boundary": "pure evaluator call",
+    "warmupsPerSystem": 2,
+    "measuredPerSystem": 4,
+    "fullProtocolLatencyPlan": "2,000 warmups; 20,000 measured requests per system/configuration; 10 independent runs"
+  },
+  "environment": {
+    "platform": "darwin 27.2.0",
+    "architecture": "arm64",
+    "cpuModel": "Apple M4",
+    "cores": 10,
+    "totalMemoryBytes": 17179869184,
+    "node": "v24.11.0",
+    "typescript": "5.9.3",
+    "next": "16.4.3",
+    "betterSqlite3": "13.0.3",
+    "commit": "36e4a871645a81897c1718850d67b8ae404d9fd2",
+    "workingTreeDirty": true,
+    "harnessAndServicesShareHost": "no external service is started by this pilot"
+  }
+}

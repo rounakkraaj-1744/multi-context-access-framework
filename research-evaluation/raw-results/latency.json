@@ -1,0 +1,14 @@
+{
+  "system": "current evaluateAccess pure decision function",
+  "runtime": "v24.11.0",
+  "sampleCount": 10000,
+  "warmupCount": 1000,
+  "unit": "microseconds",
+  "mean": 1.0100901999999312,
+  "p50": 0.8750000000077307,
+  "p95": 1.040999999986525,
+  "p99": 2.332999999993035,
+  "min": 0.7499999999822649,
+  "max": 220.2920000000006,
+  "throughputPerSecond": 990010.595093456
+}

@@ -1,0 +1,12 @@
+{
+  "productionHashChainImplemented": false,
+  "tests": {
+    "modifyExistingRecord": "NOT APPLICABLE — no hash chain",
+    "modifyPreviousHash": "NOT APPLICABLE — no hash chain",
+    "deleteIntermediateRecord": "NOT APPLICABLE — no hash chain",
+    "reorderRecords": "NOT APPLICABLE — no hash chain",
+    "truncateLatestRecords": "NOT APPLICABLE — no hash chain",
+    "chainFixture": "synthetic fixture only; no claim about production audit integrity"
+  },
+  "auditEventCountImplementation": "plain SQLite audit_events rows without hash fields"
+}

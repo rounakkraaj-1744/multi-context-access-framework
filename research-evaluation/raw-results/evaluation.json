@@ -1,0 +1,581 @@
+{
+  "seed": 20261031,
+  "generatedAt": "2026-10-31T09:23:34.583Z",
+  "source": "lib/seed.ts exact stored scenario definitions",
+  "scenarioCount": 12,
+  "requestCount": 12,
+  "intentDistribution": {
+    "benign": 2,
+    "violating": 10
+  },
+  "calibrationSeed": null,
+  "evaluationSeed": 20261031,
+  "scenarioFamilyDistribution": {
+    "normal": 1,
+    "device": 1,
+    "hours": 1,
+    "network": 1,
+    "rate": 1,
+    "sequence": 1,
+    "missing": 1,
+    "stale": 1,
+    "conflict": 1,
+    "no-perm": 1,
+    "failed": 1,
+    "stepup": 1
+  },
+  "resourceSensitivityDistribution": {
+    "low": 2,
+    "high": 10
+  },
+  "contextDegradationRate": null,
+  "evaluationParameters": {
+    "baselinePermission": "resources:engineering:read",
+    "policy": {
+      "businessHoursOnly": true,
+      "registeredDeviceOnly": true,
+      "knownNetworkOnly": true,
+      "maxRequests": 20,
+      "denyUnusualSequence": true,
+      "maxContextAgeSeconds": 300
+    },
+    "note": "Exact evaluator policies used by existing Scenario Lab; not six paper baselines."
+  },
+  "all": {
+    "n": 12,
+    "benign": 2,
+    "violating": 10,
+    "FAR": 0,
+    "FRR": 0,
+    "CR": 0.5,
+    "verificationBurden": 0.5,
+    "containmentRate": 1,
+    "endToEndFAR": 0,
+    "precision": 0.9090909090909091,
+    "recall": 1,
+    "f1": 0.9523809523809523,
+    "decisionDistribution": {
+      "ALLOW": 1,
+      "STEP_UP_AUTH": 1,
+      "DENY": 10
+    }
+  },
+  "perFamily": {
+    "normal": {
+      "n": 1,
+      "benign": 1,
+      "violating": 0,
+      "FAR": null,
+      "FRR": 0,
+      "CR": 0,
+      "verificationBurden": 0,
+      "containmentRate": null,
+      "endToEndFAR": null,
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "decisionDistribution": {
+        "ALLOW": 1,
+        "STEP_UP_AUTH": 0,
+        "DENY": 0
+      }
+    },
+    "device": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "hours": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "network": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "rate": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "sequence": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "missing": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "stale": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "conflict": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "no-perm": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "failed": {
+      "n": 1,
+      "benign": 0,
+      "violating": 1,
+      "FAR": 0,
+      "FRR": null,
+      "CR": null,
+      "verificationBurden": null,
+      "containmentRate": 1,
+      "endToEndFAR": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 0,
+        "DENY": 1
+      }
+    },
+    "stepup": {
+      "n": 1,
+      "benign": 1,
+      "violating": 0,
+      "FAR": null,
+      "FRR": 0,
+      "CR": 1,
+      "verificationBurden": 1,
+      "containmentRate": null,
+      "endToEndFAR": null,
+      "precision": 0,
+      "recall": null,
+      "f1": null,
+      "decisionDistribution": {
+        "ALLOW": 0,
+        "STEP_UP_AUTH": 1,
+        "DENY": 0
+      }
+    }
+  },
+  "decisions": [
+    {
+      "id": "normal",
+      "intent": "BENIGN",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "ALLOW",
+      "actual": "ALLOW",
+      "reasonCodes": [
+        "PERMISSION_AND_CONTEXT_VALID"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "LOW",
+      "stepUpOutcome": "N/A",
+      "accepted": true,
+      "verify": false,
+      "denied": false
+    },
+    {
+      "id": "device",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": false,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [
+        "UNREGISTERED_DEVICE"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "hours",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": false,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [
+        "OUTSIDE_BUSINESS_HOURS"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "network",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": true,
+        "networkKnown": false,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [
+        "UNKNOWN_NETWORK"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "rate",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 99,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [
+        "REQUEST_RATE_EXCEEDED"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "sequence",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": true,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [
+        "UNUSUAL_SEQUENCE"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "missing",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": false,
+        "contextAgeSeconds": 0
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [
+        "CONTEXT_UNAVAILABLE"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "stale",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 600
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [
+        "STALE_CONTEXT"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "conflict",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [],
+      "baseline": "ALLOW",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "no-perm",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [
+        "MISSING_PERMISSION"
+      ],
+      "baseline": "DENY",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "failed",
+      "intent": "VIOLATING",
+      "input": {
+        "businessHours": false,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "DENY",
+      "actual": "DENY",
+      "reasonCodes": [
+        "OUTSIDE_BUSINESS_HOURS"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "HIGH",
+      "stepUpOutcome": "N/A",
+      "accepted": false,
+      "verify": false,
+      "denied": true
+    },
+    {
+      "id": "stepup",
+      "intent": "BENIGN",
+      "input": {
+        "businessHours": true,
+        "registeredDevice": true,
+        "networkKnown": true,
+        "requestsInWindow": 1,
+        "unusualSequence": false,
+        "contextAvailable": true,
+        "contextAgeSeconds": 0
+      },
+      "expected": "STEP_UP_AUTH",
+      "actual": "STEP_UP_AUTH",
+      "reasonCodes": [
+        "STEP_UP_REQUIRED"
+      ],
+      "baseline": "ALLOW",
+      "sensitivity": "LOW",
+      "stepUpOutcome": "NOT_SIMULATED",
+      "accepted": false,
+      "verify": true,
+      "denied": false
+    }
+  ]
+}
