@@ -3,8 +3,12 @@ import { evaluateConditions } from "./conditions";
 import { evaluateCrossCategoryConsistency } from "./interactions";
 import { aggregateCategory, aggregateSeverity } from "./severity";
 import { hashTrace } from "./trace";
-import { freezePolicyVersion } from "./policy-version";
+import { assertGammaVersionMetadata, freezePolicyVersion } from "./policy-version";
 import { assertValidThetaPolicy } from "./theta-validation";
+import { evaluateGammaConstraints, GammaEvaluationError } from "./gamma-evaluator";
+import { validateGammaConstraints } from "./gamma-validation";
+import { combineGammaEffects, type GammaDecisionItemTrace } from "./gamma-effects";
+import type { GammaConstraint } from "./gamma-types";
 import type {
   ActionClass,
   AuthorizationInput,
@@ -14,6 +18,8 @@ import type {
   McacTrace,
   PolicyVersion,
   Rule,
+  ContextItemKind,
+  LegacyConsistencyConstraint,
 } from "./types";
 
 export function evaluateMcac(input: AuthorizationInput): AuthorizationResult {
@@ -25,6 +31,7 @@ export function evaluateMcac(input: AuthorizationInput): AuthorizationResult {
   let conditionEvaluations: readonly ConditionEvaluation[] = Object.freeze([]);
   let interactions: ReturnType<typeof evaluateCrossCategoryConsistency>["interactions"] =
     Object.freeze([]);
+  let gammaTrace: McacTrace["gamma"] = null;
   let mEnv: 0 | 1 | 2 = 0;
   let mBeh: 0 | 1 | 2 = 0;
   let severity: 0 | 1 | 2 = 0;
@@ -49,9 +56,34 @@ export function evaluateMcac(input: AuthorizationInput): AuthorizationResult {
     )
       throw new Error("Behavioral request descriptor does not match the authorization request");
     waiverValid = isWaiverValid(input.waiver, input, profile!);
-    const consistency = evaluateCrossCategoryConsistency(policy, input.consistencyEvidence);
+    const gammaConstraints = policy.consistencyConstraints.filter(isGammaConstraint);
+    const legacyConstraints = policy.consistencyConstraints.filter(
+      (constraint): constraint is LegacyConsistencyConstraint => !isGammaConstraint(constraint),
+    );
+    const legacyPolicy = { ...policy, consistencyConstraints: legacyConstraints } as PolicyVersion;
+    const consistency = evaluateCrossCategoryConsistency(legacyPolicy, input.consistencyEvidence);
     interactions = consistency.interactions;
     items = classifyContext(input.context, policy, consistency.violatedItems, input.request.time);
+    let gammaEvaluations: ReturnType<typeof evaluateGammaConstraints> = Object.freeze([]);
+    let combined: ReturnType<typeof combineGammaEffects> = Object.freeze([]);
+    const gammaIndeterminate = new Set<ContextItemKind>();
+    if (gammaConstraints.length > 0) {
+      gammaEvaluations = evaluateGammaConstraints(
+        gammaConstraints,
+        items,
+        policy.interactions.crossCategoryConsistency,
+      );
+      const eligibleGammaConstraints = applicableGammaConstraints(gammaConstraints, applicable);
+      combined = combineGammaEffects(eligibleGammaConstraints, gammaEvaluations);
+      const gammaViolations = new Set(
+        combined.filter((entry) => entry.effect === "VIOLATED").map((entry) => entry.itemKind),
+      );
+      for (const entry of combined)
+        if (entry.effect === "INDETERMINATE") gammaIndeterminate.add(entry.itemKind);
+      for (const item of gammaViolations) gammaIndeterminate.delete(item);
+      const violated = new Set([...consistency.violatedItems, ...gammaViolations]);
+      items = classifyContext(input.context, policy, violated, input.request.time);
+    }
     const env = evaluateConditions(
       applicable,
       "environmental",
@@ -60,6 +92,7 @@ export function evaluateMcac(input: AuthorizationInput): AuthorizationResult {
       input.request.time,
       policy,
       profile!.sensitivity,
+      gammaIndeterminate,
     );
     const behavior = evaluateConditions(
       applicable,
@@ -69,6 +102,7 @@ export function evaluateMcac(input: AuthorizationInput): AuthorizationResult {
       input.request.time,
       policy,
       profile!.sensitivity,
+      gammaIndeterminate,
     );
     interactions = Object.freeze([...interactions, ...env.interactions, ...behavior.interactions]);
     const all = [...env.evaluations, ...behavior.evaluations].map((evaluation) =>
@@ -89,6 +123,42 @@ export function evaluateMcac(input: AuthorizationInput): AuthorizationResult {
         (a, b) => a.ruleId.localeCompare(b.ruleId) || a.conditionId.localeCompare(b.conditionId),
       ),
     );
+    if (gammaConstraints.length > 0) {
+      gammaTrace = Object.freeze({
+        traceSchemaVersion: 1,
+        policyVersion: policy.version,
+        constraints: gammaEvaluations,
+        items: Object.freeze(
+          combined.map((entry): GammaDecisionItemTrace =>
+            Object.freeze({
+              itemKind: entry.itemKind,
+              effect: entry.effect,
+              contributingConstraints: entry.constraints,
+              dependentConditions: Object.freeze(
+                conditionEvaluations
+                  .filter((evaluation) => evaluation.itemReferences.includes(entry.itemKind))
+                  .map((evaluation) => {
+                    const rule = applicable.find(
+                      (candidate) => candidate.id === evaluation.ruleId,
+                    )!;
+                    return Object.freeze({
+                      ruleId: evaluation.ruleId,
+                      conditionId: evaluation.conditionId,
+                      outcome: evaluation.outcome,
+                      strength: evaluation.strength,
+                      severity: evaluation.severity,
+                      reasonCode: evaluation.reasonCode,
+                      sensitivity: profile!.sensitivity,
+                      strictLowSensitivity: policy.strictLowSensitivity,
+                      failOpen: rule.failOpen,
+                    });
+                  }),
+              ),
+            }),
+          ),
+        ),
+      });
+    }
     mEnv = aggregateCategory(conditionEvaluations, "environmental");
     mBeh = aggregateCategory(conditionEvaluations, "behavioral");
     severity = aggregateSeverity(mEnv, mBeh);
@@ -116,6 +186,7 @@ export function evaluateMcac(input: AuthorizationInput): AuthorizationResult {
     items,
     conditions: conditionEvaluations,
     interactions,
+    gamma: gammaTrace,
     mEnv,
     mBeh,
     m: severity,
@@ -205,9 +276,18 @@ function validateModelPolicy(input: AuthorizationInput, policy: PolicyVersion): 
     )
       throw new Error(`Invalid consistency constraint ${constraint.id}`);
   }
+  const gammaConstraints = policy.consistencyConstraints.filter(isGammaConstraint);
+  const gammaValidation = validateGammaConstraints(
+    gammaConstraints,
+    policy.interactions.crossCategoryConsistency,
+  );
+  if (!gammaValidation.ok)
+    throw new GammaEvaluationError("INVALID_GAMMA_POLICY", gammaValidation.errors);
+  if (policy.gammaMetadata !== undefined) assertGammaVersionMetadata(policy);
+  const gammaIds = new Set(gammaConstraints.map((constraint) => constraint.id));
   const evidenceIds = new Set<string>();
   for (const evidence of input.consistencyEvidence) {
-    if (!declared.has(evidence.id))
+    if (!declared.has(evidence.id) || gammaIds.has(evidence.id))
       throw new Error(`Undeclared consistency evidence ${evidence.id}`);
     if (evidenceIds.has(evidence.id))
       throw new Error(`Duplicate consistency evidence ${evidence.id}`);
@@ -229,6 +309,36 @@ function validateModelPolicy(input: AuthorizationInput, policy: PolicyVersion): 
     if (policy.verificationRequired[kind] !== 0 && policy.verificationRequired[kind] !== 1)
       throw new Error(`Invalid verification requirement for ${kind}`);
   }
+}
+
+function isGammaConstraint(
+  constraint: PolicyVersion["consistencyConstraints"][number],
+): constraint is GammaConstraint {
+  return "expression" in constraint;
+}
+
+function applicableGammaConstraints(
+  constraints: readonly GammaConstraint[],
+  rules: readonly Rule[],
+): readonly GammaConstraint[] {
+  const dependentKinds = new Set<ContextItemKind>();
+  for (const rule of rules) {
+    for (const condition of [...rule.environmental, ...rule.behavioral]) {
+      dependentKinds.add(condition.item);
+      if (condition.comparator === "not_novel") dependentKinds.add("request");
+      if (
+        typeof condition.parameter === "object" &&
+        condition.parameter !== null &&
+        !Array.isArray(condition.parameter) &&
+        "by" in condition.parameter &&
+        condition.parameter.by === "network"
+      )
+        dependentKinds.add("network");
+    }
+  }
+  return constraints.filter((constraint) =>
+    constraint.items.some((kind) => dependentKinds.has(kind)),
+  );
 }
 
 function isWaiverValid(

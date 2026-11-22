@@ -9,7 +9,7 @@ import type {
 export const GAMMA_CANONICALIZATION_VERSION = "mcac-gamma-c14n-v1" as const;
 export type GammaCanonicalizationVersion = typeof GAMMA_CANONICALIZATION_VERSION;
 export type GammaCanonicalizable =
-  GammaConstraint | GammaExpression | GammaOperand | GammaTypedLiteral;
+  GammaConstraint | GammaExpression | GammaOperand | GammaTypedLiteral | readonly GammaConstraint[];
 export type GammaAstDigest = Readonly<{
   canonicalizationVersion: GammaCanonicalizationVersion;
   algorithm: "SHA-256";

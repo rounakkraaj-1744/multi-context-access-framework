@@ -11,3 +11,6 @@ data/*.sqlite-shm
 data/*.sqlite-wal
 playwright-report
 test-results
+docs/
+research/
+research-evaluation/

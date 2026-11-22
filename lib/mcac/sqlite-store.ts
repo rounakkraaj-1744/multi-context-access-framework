@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 import { sqlite } from "../db";
-import { freezePolicyVersion, assertPolicyVersionTransition } from "./policy-version";
+import {
+  freezePolicyVersion,
+  assertGammaVersionMetadata,
+  assertPolicyVersionTransition,
+  withGammaVersionMetadata,
+} from "./policy-version";
 import { canonicalJson, verifyTraceHash } from "./trace";
 import type { McacTrace, PolicyVersion } from "./types";
 
@@ -10,7 +15,7 @@ export function storePolicyVersion(
   createdAt: string,
   parentVersion: string | null = null,
 ): void {
-  const snapshot = freezePolicyVersion(policy);
+  const snapshot = freezePolicyVersion(withGammaVersionMetadata(policy));
   const serialized = canonicalJson(snapshot);
   const digest = sha256(serialized);
   const insert = sqlite.transaction(() => {
@@ -44,7 +49,9 @@ export function loadPolicyVersion(version: string): PolicyVersion {
   if (!row) throw new Error(`MCAC policy version ${version} was not found`);
   if (sha256(row.snapshot) !== row.snapshot_hash)
     throw new Error(`MCAC policy version ${version} snapshot integrity check failed`);
-  return freezePolicyVersion(JSON.parse(row.snapshot) as PolicyVersion);
+  const snapshot = freezePolicyVersion(JSON.parse(row.snapshot) as PolicyVersion);
+  assertGammaVersionMetadata(snapshot);
+  return snapshot;
 }
 
 /** Appends an immutable, SHA-256 chained trace. `createdAt` is explicit for replayable callers. */

@@ -28,6 +28,7 @@ export function evaluateCondition(
   evaluationTime: number,
   policy: PolicyVersion,
   sensitivity: Sensitivity,
+  gammaIndeterminateItems: ReadonlySet<ContextItemKind> = new Set(),
 ): EvaluatedCondition {
   const target = classifiedItems.find((item) => item.kind === condition.item)!;
   const references: ContextItemKind[] = [condition.item];
@@ -42,8 +43,11 @@ export function evaluateCondition(
   }
 
   const usedItems = references.map((kind) => classifiedItems.find((item) => item.kind === kind)!);
+  const gammaIndeterminate = references.some((kind) => gammaIndeterminateItems.has(kind));
   const outcome: TruthValue =
-    usedItems.some((item) => item.validityStatus !== "V") || parameter === undefined
+    usedItems.some((item) => item.validityStatus !== "V") ||
+    parameter === undefined ||
+    gammaIndeterminate
       ? "I"
       : compare(
             target,
@@ -68,13 +72,17 @@ export function evaluateCondition(
         ? "CONDITION_FALSE"
         : parameter === undefined && resolution.interaction
           ? "THRESHOLD_CONTEXT_INDETERMINATE"
-          : `CONTEXT_${usedItems.find((item) => item.validityStatus !== "V")?.validityStatus ?? "U"}`;
+          : gammaIndeterminate && usedItems.every((item) => item.validityStatus === "V")
+            ? "GAMMA_INDETERMINATE"
+            : `CONTEXT_${usedItems.find((item) => item.validityStatus !== "V")?.validityStatus ?? "U"}`;
   const explanation =
     outcome === "T"
       ? "The valid context item satisfies the condition."
       : outcome === "F"
         ? "The valid context item does not satisfy the condition."
-        : `The condition is indeterminate because required evidence is ${parameter === undefined && resolution.interaction ? "unavailable" : usedItems.map((item) => item.validityStatus).join(", ")}.`;
+        : gammaIndeterminate && usedItems.every((item) => item.validityStatus === "V")
+          ? "The condition is indeterminate because a referenced item has an indeterminate Γ effect."
+          : `The condition is indeterminate because required evidence is ${parameter === undefined && resolution.interaction ? "unavailable" : usedItems.map((item) => item.validityStatus).join(", ")}.`;
   return {
     evaluation: Object.freeze({
       ruleId: rule.id,
@@ -114,13 +122,24 @@ export function evaluateConditions(
   time: number,
   policy: PolicyVersion,
   sensitivity: Sensitivity,
+  gammaIndeterminateItems: ReadonlySet<ContextItemKind> = new Set(),
 ): Readonly<{
   evaluations: readonly ConditionEvaluation[];
   interactions: readonly InteractionEvaluation[];
 }> {
   const evaluated = rules.flatMap((rule) =>
     (category === "environmental" ? rule.environmental : rule.behavioral).map((condition) =>
-      evaluateCondition(rule, condition, category, context, items, time, policy, sensitivity),
+      evaluateCondition(
+        rule,
+        condition,
+        category,
+        context,
+        items,
+        time,
+        policy,
+        sensitivity,
+        gammaIndeterminateItems,
+      ),
     ),
   );
   return Object.freeze({

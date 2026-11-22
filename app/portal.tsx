@@ -29,6 +29,7 @@ const glyph: Record<string, string> = {
   Alerts: "!",
   Incidents: "⚑",
   "Context lab": "⌘",
+  "Formal MCAC Lab": "Γ",
   Audit: "≡",
   Resources: "▤",
   Profile: "◎",
@@ -50,6 +51,7 @@ const adminNav = [
   "Alerts",
   "Incidents",
   "Context lab",
+  "Formal MCAC Lab",
   "Audit",
 ];
 const superNav = [
@@ -66,6 +68,7 @@ const superNav = [
   "Policies",
   "MCAC drafts",
   "Context lab",
+  "Formal MCAC Lab",
   "Audit",
 ];
 const userNav = ["Overview", "Resources", "Access history", "Profile", "Notifications"];
@@ -113,6 +116,7 @@ export default function Portal({
     else if (target === "Incidents") endpoint = "/api/admin/incidents";
     else if (target === "Audit") endpoint = "/api/admin/audit";
     else if (target === "Context lab") endpoint = "/api/admin/scenarios";
+    else if (target === "Formal MCAC Lab") endpoint = "/api/admin/mcac-research";
     else if (target === "Roles") endpoint = "/api/admin/roles";
     else if (target === "Permissions") endpoint = "/api/admin/permissions";
     else if (target === "Policies") endpoint = "/api/admin/policies";
@@ -188,6 +192,50 @@ export default function Portal({
     setData((old: any) => ({ ...old, ...result.data }));
     setBusy(false);
     message(result.error?.message ?? "Scenario run completed.");
+  }
+  async function runFormalResearch(scenarioId: string) {
+    setBusy(true);
+    const result = await api("/api/admin/mcac-research", {
+      method: "POST",
+      body: JSON.stringify({ action: "run", scenarioId }),
+    });
+    setData((old: any) => ({ ...old, evaluation: result.data ?? null }));
+    setBusy(false);
+    if (result.error) message(result.error.message);
+  }
+  async function replayFormalResearch(scenarioId: string, runId: string, policyVersion: string) {
+    setBusy(true);
+    const result = await api("/api/admin/mcac-research", {
+      method: "POST",
+      body: JSON.stringify({ action: "replay", scenarioId, runId, policyVersion }),
+    });
+    setData((old: any) => ({
+      ...old,
+      evaluation: old?.evaluation
+        ? {
+            ...old.evaluation,
+            replay: result.data?.replay ?? {
+              verified: false,
+              originalDecision: old.evaluation.result?.decision ?? null,
+              replayedDecision: null,
+              reasons: [result.error?.code ?? "REPLAY_REQUEST_FAILED"],
+              gammaTraceComparison: { matches: null, original: old.evaluation.result?.trace?.gamma ?? null, replayed: null },
+            },
+          }
+        : old?.evaluation,
+    }));
+    setBusy(false);
+    if (result.error) message(result.error.message);
+  }
+  async function compareFormalResearch(scenarioIds: string[]) {
+    setBusy(true);
+    const result = await api("/api/admin/mcac-research", {
+      method: "POST",
+      body: JSON.stringify({ action: "compare", scenarioIds }),
+    });
+    setData((old: any) => ({ ...old, comparison: result.data ?? null }));
+    setBusy(false);
+    if (result.error) message(result.error.message);
   }
   if (!actor)
     return (
@@ -617,6 +665,16 @@ export default function Portal({
           message={message}
           reload={load}
           superAdmin={role === "Super Admin"}
+        />
+      );
+    if (section === "Formal MCAC Lab")
+      return (
+        <FormalMcacResearchPanel
+          data={data}
+          onRun={runFormalResearch}
+          onReplay={replayFormalResearch}
+          onCompare={compareFormalResearch}
+          busy={busy}
         />
       );
     if (section === "Alerts")
@@ -1516,6 +1574,303 @@ function ScenarioPanel({ data, onRun, busy }: { data: any; onRun: () => void; bu
     </>
   );
 }
+
+function FormalMcacResearchPanel({
+  data,
+  onRun,
+  onReplay,
+  onCompare,
+  busy,
+}: {
+  data: any;
+  onRun: (scenarioId: string) => void;
+  onReplay: (scenarioId: string, runId: string, policyVersion: string) => void;
+  onCompare: (scenarioIds: string[]) => void;
+  busy: boolean;
+}) {
+  const [selected, setSelected] = useState("");
+  const scenarios = data?.scenarios ?? [];
+  const evaluation = data?.evaluation;
+  const result = evaluation?.result;
+  const contextItems = evaluation?.context
+    ? [
+        ...Object.values(evaluation.context.environmental),
+        ...Object.values(evaluation.context.behavioral),
+      ]
+    : [];
+  const validityByKind = new Map(
+    (result?.trace?.items ?? []).map((item: any) => [item.kind, item.validityStatus]),
+  );
+  return (
+    <>
+      <PageHeading
+        label="RESEARCH MODE · SYNTHETIC FIXTURES"
+        title="Formal MCAC research lab"
+        subtitle="Research demonstration: runs the formal evaluateMcac engine on fixed synthetic inputs. It does not authorize access or use live session context."
+      />
+      <div className="lab-banner">
+        <span>ⓘ</span>
+        <div>
+          <b>Isolated research demonstration</b>
+          <p>
+            {data?.policyId ?? "Loading fixed demo policy…"} · not published, activated, or selected
+            for live authorization. Inputs and outputs below are synthetic.
+          </p>
+        </div>
+      </div>
+      <div className="panel">
+        <div className="panel-title">
+          <div>
+            <h2>Run a formal scenario</h2>
+            <p className="panel-subtitle">Select a server-defined scenario; the browser cannot submit policy or context values.</p>
+          </div>
+        </div>
+        <div className="inline-form">
+          <label>
+            Synthetic scenario
+            <select value={selected} onChange={(event) => setSelected(event.target.value)}>
+              <option value="">Choose a scenario</option>
+              {scenarios.map((scenario: any) => (
+                <option value={scenario.id} key={scenario.id}>
+                  {scenario.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            className="button primary"
+            disabled={busy || !selected}
+            onClick={() => onRun(selected)}
+          >
+            {busy ? "Evaluating…" : "Run formal evaluation"}
+          </button>
+          <button
+            className="button secondary"
+            disabled={busy || scenarios.length === 0}
+            onClick={() => onCompare(scenarios.map((scenario: any) => scenario.id))}
+          >
+            {busy ? "Comparing…" : "Compare all fixtures: RBAC vs MCAC"}
+          </button>
+        </div>
+        {scenarios.find((scenario: any) => scenario.id === selected)?.description && (
+          <p className="muted">{scenarios.find((scenario: any) => scenario.id === selected).description}</p>
+        )}
+      </div>
+
+      {data?.comparison && (
+        <div className="panel">
+          <div className="panel-title">
+            <div>
+              <h2>Formal RBAC vs MCAC comparison</h2>
+              <p className="panel-subtitle">
+                Research demonstration · fixed policy {data.comparison.policyVersion}. These counts describe executed synthetic fixtures only; they are not real-world accuracy, FAR, FRR, or production effectiveness.
+              </p>
+            </div>
+          </div>
+          <div className="metric-grid">
+            <Metric label="Executed scenarios" value={String(data.comparison.metrics.totalScenarios)} icon="∑" />
+            <Metric label="Decision differences" value={String(data.comparison.metrics.decisionDifferenceCount)} icon="↔" />
+            <Metric label="MCAC restrictions" value={String(data.comparison.metrics.mcacRestrictionCount)} icon="⊣" />
+            <Metric label="RBAC ALLOW / DENY" value={`${data.comparison.metrics.rbac.allow} / ${data.comparison.metrics.rbac.deny}`} icon="♙" />
+            <Metric label="MCAC ALLOW / VERIFY / DENY" value={`${data.comparison.metrics.mcac.allow} / ${data.comparison.metrics.mcac.verify} / ${data.comparison.metrics.mcac.deny}`} icon="◎" />
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>SCENARIO</th><th>RBAC</th><th>FORMAL MCAC</th><th>DIFFERENCE</th><th>MCAC CONDITION / Γ / Θ CONTRIBUTIONS</th></tr></thead>
+              <tbody>
+                {data.comparison.results.map((comparison: any) => (
+                  <tr key={comparison.scenario.id}>
+                    <td><b>{comparison.scenario.name}</b><br /><code>{comparison.scenario.id}</code></td>
+                    <td>{comparison.rbac.decision}</td>
+                    <td>{comparison.mcac.decision} · severity {comparison.mcac.severity}<br /><small>Policy {comparison.mcac.policyVersion}</small></td>
+                    <td>{comparison.differs ? "Yes" : "No"}{comparison.restricted ? " · MCAC restricted" : ""}</td>
+                    <td>
+                      <p>{comparison.explanation}</p>
+                      {comparison.mcac.conditions.length > 0 && <ul className="research-list">{comparison.mcac.conditions.map((condition: any) => <li key={condition.conditionId}><b>{condition.conditionId}</b> ({condition.category}; {condition.itemReferences.join(", ")}): {condition.outcome}, severity {condition.severity} · {condition.explanation}</li>)}</ul>}
+                      {comparison.mcac.gamma && <p>Γ: {comparison.mcac.gamma.constraints.map((entry: any) => `${entry.constraintId} ${entry.outcome}`).join("; ")} · effects {comparison.mcac.gamma.items.map((entry: any) => `${entry.itemKind} ${entry.effect}`).join(", ")}</p>}
+                      {comparison.mcac.theta.length > 0 && <p>Θ: {comparison.mcac.theta.map((entry: any) => entry.explanation).join("; ")}</p>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {evaluation && result && (
+        <>
+          <div className="panel">
+            <div className="panel-title">
+              <div>
+                <h2>{evaluation.scenario.name}</h2>
+                <p className="panel-subtitle">
+                  Actual result from <code>{evaluation.evaluator}</code> · policy {evaluation.policy.version}
+                </p>
+              </div>
+              <span className={`status-pill ${result.decision === "ALLOW" ? "approved" : result.decision === "VERIFY" ? "pending" : "denied"}`}>
+                {result.decision}
+              </span>
+            </div>
+            <p>{evaluation.scenario.description}</p>
+            <p>
+              Baseline permission: <b>{evaluation.scenario.baselinePermission ? "PASS" : "DENY"}</b>
+              {" · "}Severity: <b>{result.severity}</b>
+              {" · "}Environmental: <b>{result.mEnv}</b>
+              {" · "}Behavioral: <b>{result.mBeh}</b>
+            </p>
+            <button
+              className="button secondary"
+              disabled={busy || !evaluation.runId}
+              onClick={() => onReplay(evaluation.scenario.id, evaluation.runId, evaluation.policy.version)}
+            >
+              {busy ? "Replaying…" : "↻ Replay this run"}
+            </button>
+          </div>
+
+          {evaluation.replay && (
+            <div className="panel">
+              <div className="panel-title">
+                <div>
+                  <h2>Research replay verification</h2>
+                  <p className="panel-subtitle">Research demonstration replay uses the same server fixture and fixed policy with the existing verifier. Replay data is not written to ordinary authorization records.</p>
+                </div>
+                <span className={`status-pill ${evaluation.replay.verified ? "approved" : "denied"}`}>
+                  {evaluation.replay.verified ? "VERIFIED" : "VERIFICATION FAILED"}
+                </span>
+              </div>
+              <p>
+                Original decision: <b>{evaluation.replay.originalDecision ?? "Unavailable"}</b>
+                {" · "}Replayed decision: <b>{evaluation.replay.replayedDecision ?? "Unavailable"}</b>
+              </p>
+              {evaluation.replay.originalSeverity !== undefined && (
+                <p>
+                  Original severity: <b>{evaluation.replay.originalSeverity}</b>
+                  {" · "}Replayed severity: <b>{evaluation.replay.replayedSeverity ?? "Unavailable"}</b>
+                </p>
+              )}
+              <p>
+                Γ trace comparison: <b>{evaluation.replay.gammaTraceComparison?.matches === null ? "NOT AVAILABLE" : evaluation.replay.gammaTraceComparison?.matches ? "MATCH" : "MISMATCH"}</b>
+              </p>
+              {evaluation.replay.reasons?.length > 0 ? (
+                <ul className="research-list">
+                  {evaluation.replay.reasons.map((reason: string, index: number) => <li key={`${index}-${reason}`}>{reason}</li>)}
+                </ul>
+              ) : <p className="muted">No verification failures were reported.</p>}
+              <details>
+                <summary>Compare original and replayed Γ trace data</summary>
+                <div className="research-replay-grid">
+                  <div><h3>Original Γ trace</h3><pre className="research-json">{JSON.stringify(evaluation.replay.gammaTraceComparison?.original ?? null, null, 2)}</pre></div>
+                  <div><h3>Replayed Γ trace</h3><pre className="research-json">{JSON.stringify(evaluation.replay.gammaTraceComparison?.replayed ?? null, null, 2)}</pre></div>
+                </div>
+              </details>
+            </div>
+          )}
+
+          <div className="panel">
+            <PanelTitle title="Synthetic policy and context" />
+            <p className="muted">These are fixture inputs. Validity statuses shown here were classified by the formal evaluator.</p>
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>ITEM</th><th>CLASSIFIED STATUS</th><th>SYNTHETIC VALUE</th></tr></thead>
+                <tbody>
+                  {contextItems.map((raw: any) => (
+                    <tr key={raw.kind}>
+                      <td>{raw.kind}</td>
+                      <td>{String(validityByKind.get(raw.kind) ?? "not evaluated after baseline denial")}</td>
+                      <td><code>{JSON.stringify(raw.value)}</code></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <details>
+              <summary>Inspect fixed policy, including Θ mapping and Γ AST</summary>
+              <pre className="research-json">{JSON.stringify(evaluation.policy, null, 2)}</pre>
+            </details>
+          </div>
+
+          <div className="panel">
+            <PanelTitle title="Condition outcomes and Θ interactions" />
+            {result.conditionEvaluations.length ? (
+              <div className="table-wrap">
+                <table>
+                  <thead><tr><th>RULE / CONDITION</th><th>OUTCOME</th><th>SEVERITY</th><th>REASON</th></tr></thead>
+                  <tbody>
+                    {result.conditionEvaluations.map((condition: any) => (
+                      <tr key={`${condition.ruleId}:${condition.conditionId}`}>
+                        <td>{condition.ruleId} / {condition.conditionId}</td>
+                        <td>{condition.outcome}</td>
+                        <td>{condition.severity}</td>
+                        <td>{condition.reasonCode}: {condition.explanation}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : <p className="muted">No conditions ran because baseline permission was denied.</p>}
+            {result.trace.interactions.length ? (
+              <ul className="research-list">
+                {result.trace.interactions.map((interaction: any) => (
+                  <li key={interaction.id}>
+                    <b>{interaction.kind} · {interaction.result}</b> — {interaction.explanation}
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="muted">No Θ interactions were evaluated for this result.</p>}
+          </div>
+
+          <div className="panel">
+            <PanelTitle title="Γ evaluation trace and effects" />
+            {result.trace.gamma ? (
+              <>
+                {result.trace.gamma.constraints.map((constraint: any) => (
+                  <section className="research-trace" key={constraint.constraintId}>
+                    <h3>{constraint.constraintId}: {constraint.outcome}</h3>
+                    <p className="muted">AST digest {constraint.trace.astDigest.hex} · evaluator {constraint.trace.evaluatorSemanticsVersion}</p>
+                    <div className="table-wrap">
+                      <table>
+                        <thead><tr><th>NODE PATH</th><th>TYPE</th><th>OUTCOME</th><th>REASONS</th><th>CHILD ORDER</th></tr></thead>
+                        <tbody>
+                          {constraint.trace.nodes.map((node: any) => (
+                            <tr key={node.nodeId}>
+                              <td><code>{node.nodePath}</code></td>
+                              <td>{node.nodeType}</td>
+                              <td>{node.outcome}</td>
+                              <td>{node.reasonCodes.join(", ") || "—"}</td>
+                              <td><code>{node.childEvaluationOrder.join(" → ") || "—"}</code></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                ))}
+                {result.trace.gamma.items.length ? (
+                  <div className="table-wrap">
+                    <table>
+                      <thead><tr><th>ITEM EFFECT</th><th>CONSTRAINTS</th><th>DEPENDENT CONDITIONS</th></tr></thead>
+                      <tbody>
+                        {result.trace.gamma.items.map((item: any) => (
+                          <tr key={item.itemKind}>
+                            <td>{item.itemKind}: {item.effect}</td>
+                            <td>{item.contributingConstraints.map((entry: any) => `${entry.constraintId}=${entry.outcome}`).join(", ")}</td>
+                            <td>{item.dependentConditions.map((entry: any) => `${entry.ruleId}:${entry.conditionId}=${entry.outcome} (severity ${entry.severity})`).join("; ") || "No dependent conditions"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : <p className="muted">No applicable Γ item effects; constraint outcomes are still traced.</p>}
+              </>
+            ) : <p className="muted">Γ was not evaluated because baseline permission was denied.</p>}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 function ManagementPanel({
   section,
   data,

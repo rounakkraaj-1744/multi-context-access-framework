@@ -1,5 +1,6 @@
 import { evaluateMcac } from "./decision";
 import { verifyTraceHash } from "./trace";
+import { canonicalJson } from "./trace";
 import type { AuthorizationInput, McacTrace, PolicyVersion } from "./types";
 
 export function replayTrace(
@@ -86,5 +87,7 @@ export function replayTrace(
     replayed.trace.m !== trace.m
   )
     throw new Error("Replay did not reproduce the recorded authorization result");
+  if (canonicalJson(replayed.trace.gamma) !== canonicalJson(trace.gamma))
+    throw new Error("Replay did not reproduce the recorded Γ evaluation trace");
   return replayed;
 }

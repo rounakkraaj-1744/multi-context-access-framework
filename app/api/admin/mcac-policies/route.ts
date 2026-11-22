@@ -1,6 +1,7 @@
 import { actorOrError, isAdmin, isSuperAdmin, json } from "@/lib/api";
 import { audit, id, now, sqlite } from "@/lib/db";
 import { thetaPolicyErrors } from "@/lib/mcac/theta-validation";
+import { validatePolicyGammaConstraints } from "@/lib/mcac/gamma-policy";
 import { z } from "zod";
 
 const actionSchema = z.enum(["read", "write", "export", "admin"]);
@@ -68,6 +69,8 @@ export async function POST(req: Request) {
       },
       { status: 400 },
     );
+  const gammaValidation = validatePolicyGammaConstraints(parsed.data.policy);
+  if (!gammaValidation.ok) return gammaValidationErrorResponse(gammaValidation.errors);
   const draftId = id();
   const timestamp = now();
   sqlite
@@ -132,6 +135,8 @@ export async function PATCH(req: Request) {
     );
   if (parsed.data.operation === "edit") {
     const update = parsed.data.draft!;
+    const gammaValidation = validatePolicyGammaConstraints(update.policy);
+    if (!gammaValidation.ok) return gammaValidationErrorResponse(gammaValidation.errors);
     const timestamp = now();
     sqlite
       .prepare(
@@ -158,7 +163,8 @@ export async function PATCH(req: Request) {
   } catch {
     policy = {};
   }
-  const report = policyReadinessReport(policy, draft.resource_class, draft.action);
+  const gammaValidation = validatePolicyGammaConstraints(policy);
+  const report = policyReadinessReport(policy, draft.resource_class, draft.action, gammaValidation);
   report.push(
     "BLOCKED: publication is disabled until formal policy validation covers the complete evaluator contract and resolved specification decisions.",
   );
@@ -168,13 +174,38 @@ export async function PATCH(req: Request) {
     )
     .run(JSON.stringify(report), auth.actor.id, now(), draft.id);
   audit(auth.actor.id, "MCAC_POLICY_DRAFT_VALIDATED", draft.id, { result: "BLOCKED" });
-  return json({ status: "BLOCKED", report });
+  return json({
+    status: "BLOCKED",
+    report,
+    gammaValidation: {
+      valid: gammaValidation.ok,
+      canonicalBytes: gammaValidation.canonicalBytes,
+      digest: gammaValidation.digest,
+      errors: gammaValidation.errors,
+    },
+  });
+}
+
+function gammaValidationErrorResponse(
+  errors: ReturnType<typeof validatePolicyGammaConstraints>["errors"],
+): Response {
+  return Response.json(
+    {
+      error: {
+        code: "GAMMA_VALIDATION_ERROR",
+        message: "The formal policy contains invalid Γ constraints.",
+        details: errors,
+      },
+    },
+    { status: 400 },
+  );
 }
 
 function policyReadinessReport(
   policy: Record<string, unknown>,
   resourceClass: string,
   action: string,
+  gammaValidation = validatePolicyGammaConstraints(policy),
 ): string[] {
   const report: string[] = [];
   const required = [
@@ -212,10 +243,15 @@ function policyReadinessReport(
     )
   )
     report.push(`At least one formal rule must explicitly cover ${resourceClass}/${action}.`);
-  // Γ grammar and the exhaustive condition-comparator grammar remain unresolved.
-  if (Array.isArray(policy.consistencyConstraints) && policy.consistencyConstraints.length)
+  if (!gammaValidation.ok)
     report.push(
-      "BLOCKED: Γ predicate comparison operators, typed operand grammar, and AST contract are not yet specified for trusted evaluation.",
+      ...gammaValidation.errors.map(
+        (error) => `Γ ${error.code} at ${error.path}: ${error.message}`,
+      ),
+    );
+  else if (gammaValidation.hasLegacyConstraints)
+    report.push(
+      "BLOCKED: legacy consistency declarations do not contain a Γ AST and remain unsupported for formal readiness.",
     );
   report.push(...thetaPolicyErrors(policy));
   if (

@@ -4,6 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { PolicyVersion } from "./types";
 import { hashTrace, verifyTraceHash } from "./trace";
+import { digestGammaAst } from "./gamma-canonical";
+import { evaluateGammaConstraints } from "./gamma-evaluator";
+import { assertGammaVersionMetadata, withGammaVersionMetadata } from "./policy-version";
+import type { GammaConstraint } from "./gamma-types";
+import type { ContextItem } from "./types";
 
 describe("immutable SQLite MCAC policy and trace persistence", () => {
   let folder = "";
@@ -94,6 +99,112 @@ describe("immutable SQLite MCAC policy and trace persistence", () => {
     expect(() =>
       sqlite.prepare("DELETE FROM mcac_policy_versions WHERE version='mcac-1'").run(),
     ).toThrow(/immutable/);
+  });
+
+  it("stores Γ digest and semantic versions with detached immutable snapshots", () => {
+    const constraint: GammaConstraint = {
+      id: "gamma-pair",
+      items: ["network", "device"],
+      expression: {
+        kind: "all",
+        children: [
+          {
+            kind: "compare",
+            operator: "eq",
+            left: "environmental.network.class",
+            right: { kind: "literal", value: { type: "networkClass", value: "corporate" } },
+          },
+          { kind: "exists", reference: "environmental.device.registered" },
+        ],
+      },
+    };
+    const gammaPolicy: PolicyVersion = {
+      ...basePolicy,
+      version: "mcac-gamma-v1",
+      consistencyConstraints: [constraint],
+    };
+    const originalConstraint = structuredClone(constraint);
+    store.storePolicyVersion(gammaPolicy, "2026-01-03T00:00:00.000Z");
+    const loaded = store.loadPolicyVersion("mcac-gamma-v1");
+    expect(loaded.gammaMetadata).toMatchObject({
+      constraintsDigest: digestGammaAst([originalConstraint]),
+      evaluatorSemanticsVersion: "mcaf-gamma-eval-v1",
+    });
+    expect(loaded.consistencyConstraints).toEqual([originalConstraint]);
+
+    const evaluation = evaluateGammaConstraints(
+      loaded.consistencyConstraints.filter(
+        (entry): entry is GammaConstraint => "expression" in entry,
+      ),
+      [
+        {
+          kind: "network",
+          value: "corporate",
+          observedAt: Date.UTC(2026, 0, 1),
+          sourceClass: "srv",
+          integrityFlag: 1,
+          validityStatus: "V",
+        },
+        {
+          kind: "device",
+          value: { registered: true, deviceId: "device-1", tokenAgeSeconds: 1 },
+          observedAt: Date.UTC(2026, 0, 1),
+          sourceClass: "srv",
+          integrityFlag: 1,
+          validityStatus: "V",
+        },
+      ] satisfies ContextItem[],
+      true,
+    );
+    expect(evaluation[0]?.outcome).toBe("SATISFIED");
+
+    const mutableConstraint = constraint as unknown as {
+      expression: { children: { right: { value: { value: string } } }[] };
+    };
+    mutableConstraint.expression.children[0]!.right.value.value = "vpn";
+    expect(store.loadPolicyVersion("mcac-gamma-v1").consistencyConstraints).toEqual([
+      originalConstraint,
+    ]);
+    expect(() => store.storePolicyVersion(gammaPolicy, "2026-01-04T00:00:00.000Z")).toThrow(
+      /already exists with different content/,
+    );
+  });
+
+  it("rejects corrupted Γ digest and evaluator-version metadata", () => {
+    const constraint: GammaConstraint = {
+      id: "gamma-metadata-check",
+      items: ["device", "session"],
+      expression: {
+        kind: "all",
+        children: [
+          { kind: "exists", reference: "environmental.device.registered" },
+          { kind: "exists", reference: "behavioral.session.method" },
+        ],
+      },
+    };
+    const valid = withGammaVersionMetadata({
+      ...basePolicy,
+      version: "mcac-gamma-corrupt-metadata",
+      consistencyConstraints: [constraint],
+    });
+    expect(() =>
+      assertGammaVersionMetadata({
+        ...valid,
+        gammaMetadata: {
+          ...valid.gammaMetadata!,
+          evaluatorSemanticsVersion: "unknown-evaluator" as never,
+        },
+      }),
+    ).toThrow(/metadata/);
+    expect(() =>
+      assertGammaVersionMetadata({
+        ...valid,
+        gammaMetadata: {
+          ...valid.gammaMetadata!,
+          constraintsDigest: { ...valid.gammaMetadata!.constraintsDigest, hex: "0".repeat(64) },
+        },
+      }),
+    ).toThrow(/metadata/);
   });
 
   it("persists replayable hash-chained traces and rejects broken links", () => {

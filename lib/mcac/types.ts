@@ -1,3 +1,7 @@
+import type { GammaConstraint } from "./gamma-types";
+import type { GammaDecisionTrace } from "./gamma-effects";
+import type { GammaAstDigest } from "./gamma-canonical";
+
 export type ContextCategory = "environmental" | "behavioral";
 export type ValidityStatus = "V" | "S" | "M" | "U" | "X";
 export type TruthValue = "T" | "F" | "I";
@@ -102,10 +106,11 @@ export type Rule = Readonly<{
   failOpen: 0 | 1;
 }>;
 
-export type DeclaredConsistencyConstraint = Readonly<{
+export type LegacyConsistencyConstraint = Readonly<{
   id: string;
   items: readonly ContextItemKind[];
 }>;
+export type DeclaredConsistencyConstraint = LegacyConsistencyConstraint | GammaConstraint;
 /** Constraint outcomes are explicit recorded inputs from the policy constraint evaluator. */
 export type ConsistencyEvidence = Readonly<{ id: string; violated: boolean }>;
 
@@ -117,6 +122,11 @@ export type ResourceProfile = Readonly<{
 
 export type PolicyVersion = Readonly<{
   version: string;
+  /** Added by immutable storage for AST-bearing versions; absent on legacy policies. */
+  gammaMetadata?: Readonly<{
+    constraintsDigest: GammaAstDigest;
+    evaluatorSemanticsVersion: typeof import("./gamma-evaluator").GAMMA_EVALUATOR_SEMANTICS_VERSION;
+  }>;
   resourceProfiles: Readonly<Record<string, ResourceProfile>>;
   freshnessSeconds: Readonly<Record<ContextItemKind, number>>;
   verificationRequired: Readonly<Record<ContextItemKind, 0 | 1>>;
@@ -178,6 +188,8 @@ export type McacTrace = Readonly<{
   items: readonly ContextItem[];
   conditions: readonly ConditionEvaluation[];
   interactions: readonly InteractionEvaluation[];
+  /** Γ-only trace contains policy outcomes and item effects, never context values. */
+  gamma: GammaDecisionTrace | null;
   mEnv: 0 | 1 | 2;
   mBeh: 0 | 1 | 2;
   m: 0 | 1 | 2;

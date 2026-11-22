@@ -48,6 +48,7 @@ describe("SQLite route integration workflows", () => {
   let userDetail: typeof import("../app/api/admin/users/[id]/route");
   let policies: typeof import("../app/api/admin/policies/route");
   let mcacPolicies: typeof import("../app/api/admin/mcac-policies/route");
+  let mcacResearch: typeof import("../app/api/admin/mcac-research/route");
   let access: typeof import("../app/api/access/route");
   let stepUp: typeof import("../app/api/access/step-up/route");
   let permissionRequests: typeof import("../app/api/user/permission-requests/route");
@@ -75,6 +76,7 @@ describe("SQLite route integration workflows", () => {
     userDetail = await import("../app/api/admin/users/[id]/route");
     policies = await import("../app/api/admin/policies/route");
     mcacPolicies = await import("../app/api/admin/mcac-policies/route");
+    mcacResearch = await import("../app/api/admin/mcac-research/route");
     access = await import("../app/api/access/route");
     stepUp = await import("../app/api/access/step-up/route");
     permissionRequests = await import("../app/api/user/permission-requests/route");
@@ -629,6 +631,304 @@ describe("SQLite route integration workflows", () => {
       ),
     ).toBe(0);
   });
+  it("validates Γ drafts and readiness without enabling publication", async () => {
+    auth.actor = sa;
+    const constraint = (id: string) => ({
+      id,
+      items: ["network", "device"],
+      expression: {
+        kind: "all",
+        children: [
+          {
+            kind: "compare",
+            operator: "eq",
+            left: "environmental.network.class",
+            right: { kind: "literal", value: { type: "networkClass", value: "corporate" } },
+          },
+          { kind: "exists", reference: "environmental.device.registered" },
+        ],
+      },
+    });
+    const formalPolicy = (consistencyConstraints: unknown[], enabled = true) => ({
+      version: "draft-policy-v1",
+      resourceProfiles: {
+        engineering: { sensitivity: "L", stepUpAvailable: true, waiverDurationSeconds: 300 },
+      },
+      freshnessSeconds: Object.fromEntries(
+        [
+          "time",
+          "location",
+          "network",
+          "device",
+          "session",
+          "frequency",
+          "history",
+          "navigation",
+          "request",
+        ].map((kind) => [kind, 300]),
+      ),
+      verificationRequired: Object.fromEntries(
+        [
+          "time",
+          "location",
+          "network",
+          "device",
+          "session",
+          "frequency",
+          "history",
+          "navigation",
+          "request",
+        ].map((kind) => [kind, 0]),
+      ),
+      consistencyConstraints,
+      expectedTransitions: [],
+      rules: [
+        {
+          id: "r1",
+          resourceClass: "engineering",
+          actions: ["read"],
+          environmental: [],
+          behavioral: [],
+          failOpen: 0,
+        },
+      ],
+      strictLowSensitivity: false,
+      interactions: { environmentConditionedThresholds: true, crossCategoryConsistency: enabled },
+    });
+    const request = (body: unknown, method = "POST") =>
+      new Request("http://localhost/api/admin/mcac-policies", {
+        method,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+    const validPolicy = formalPolicy([constraint("gamma-1")]);
+    const created = await mcacPolicies.POST(
+      request({
+        name: "Γ formal draft",
+        resourceClass: "engineering",
+        action: "read",
+        policy: validPolicy,
+      }),
+    );
+    expect(created.status).toBe(201);
+    const createdBody = (await created.json()) as { data: { id: string } };
+    const persisted = db.sqlite
+      .prepare("SELECT policy_json FROM mcac_policy_drafts WHERE id=?")
+      .get(createdBody.data.id) as { policy_json: string };
+    expect(JSON.parse(persisted.policy_json).consistencyConstraints).toEqual([
+      constraint("gamma-1"),
+    ]);
+
+    const updatedPolicy = formalPolicy([constraint("gamma-2")]);
+    const updated = await mcacPolicies.PATCH(
+      request(
+        {
+          id: createdBody.data.id,
+          operation: "edit",
+          draft: {
+            name: "Γ formal draft updated",
+            resourceClass: "engineering",
+            action: "read",
+            policy: updatedPolicy,
+          },
+        },
+        "PATCH",
+      ),
+    );
+    expect(updated.status).toBe(200);
+    const malformedUpdate = await mcacPolicies.PATCH(
+      request(
+        {
+          id: createdBody.data.id,
+          operation: "edit",
+          draft: {
+            name: "Γ formal draft broken",
+            resourceClass: "engineering",
+            action: "read",
+            policy: formalPolicy([{ ...constraint("invalid-update"), extra: true }]),
+          },
+        },
+        "PATCH",
+      ),
+    );
+    const malformedUpdateBody = (await malformedUpdate.json()) as {
+      error: { code: string; details: { code: string; path: string }[] };
+    };
+    expect(malformedUpdate.status).toBe(400);
+    expect(malformedUpdateBody.error.code).toBe("GAMMA_VALIDATION_ERROR");
+    expect(malformedUpdateBody.error.details).toContainEqual(
+      expect.objectContaining({ code: "UNKNOWN_FIELD", path: "$.consistencyConstraints[0].extra" }),
+    );
+    const persistedAfterInvalidUpdate = db.sqlite
+      .prepare("SELECT policy_json FROM mcac_policy_drafts WHERE id=?")
+      .get(createdBody.data.id) as { policy_json: string };
+    expect(JSON.parse(persistedAfterInvalidUpdate.policy_json).consistencyConstraints).toEqual([
+      constraint("gamma-2"),
+    ]);
+    const checked = await mcacPolicies.PATCH(
+      request({ id: createdBody.data.id, operation: "validate" }, "PATCH"),
+    );
+    const checkedBody = (await checked.json()) as {
+      data: {
+        status: string;
+        report: string[];
+        gammaValidation: {
+          valid: boolean;
+          canonicalBytes: number;
+          digest: { canonicalizationVersion: string; hex: string } | null;
+          errors: unknown[];
+        };
+      };
+    };
+    expect(checkedBody.data.status).toBe("BLOCKED");
+    expect(checkedBody.data.gammaValidation).toMatchObject({
+      valid: true,
+      canonicalBytes: expect.any(Number),
+      digest: {
+        canonicalizationVersion: "mcac-gamma-c14n-v1",
+        hex: expect.stringMatching(/^[0-9a-f]{64}$/),
+      },
+      errors: [],
+    });
+    expect(
+      checkedBody.data.report.some((line) => line.includes("Γ predicate comparison operators")),
+    ).toBe(false);
+    expect(checkedBody.data.report.some((line) => line.includes("publication is disabled"))).toBe(
+      true,
+    );
+
+    const malformed = formalPolicy([{ ...constraint("broken"), extra: true }]);
+    const malformedCreate = await mcacPolicies.POST(
+      request({
+        name: "Malformed Γ draft",
+        resourceClass: "engineering",
+        action: "read",
+        policy: malformed,
+      }),
+    );
+    const malformedBody = (await malformedCreate.json()) as {
+      error: { code: string; details: { code: string; path: string }[] };
+    };
+    expect(malformedCreate.status).toBe(400);
+    expect(malformedBody.error.code).toBe("GAMMA_VALIDATION_ERROR");
+    expect(malformedBody.error.details).toContainEqual(
+      expect.objectContaining({ code: "UNKNOWN_FIELD", path: "$.consistencyConstraints[0].extra" }),
+    );
+
+    const disabled = await mcacPolicies.POST(
+      request({
+        name: "Disabled Γ draft",
+        resourceClass: "engineering",
+        action: "read",
+        policy: formalPolicy([constraint("disabled")], false),
+      }),
+    );
+    const disabledBody = (await disabled.json()) as { error: { details: { code: string }[] } };
+    expect(disabled.status).toBe(400);
+    expect(disabledBody.error.details).toContainEqual(
+      expect.objectContaining({ code: "FEATURE_DISABLED" }),
+    );
+
+    const duplicate = await mcacPolicies.POST(
+      request({
+        name: "Duplicate Γ draft",
+        resourceClass: "engineering",
+        action: "read",
+        policy: formalPolicy([constraint("same"), constraint("same")]),
+      }),
+    );
+    const duplicateBody = (await duplicate.json()) as { error: { details: { code: string }[] } };
+    expect(duplicate.status).toBe(400);
+    expect(duplicateBody.error.details).toContainEqual(
+      expect.objectContaining({ code: "DUPLICATE_CONSTRAINT_ID" }),
+    );
+
+    const overLimit = {
+      ...constraint("too-wide"),
+      expression: {
+        kind: "all",
+        children: Array.from({ length: 9 }, (_, index) =>
+          index % 2 === 0
+            ? { kind: "exists", reference: "environmental.network.class" }
+            : { kind: "exists", reference: "environmental.device.registered" },
+        ),
+      },
+    };
+    const complexity = await mcacPolicies.POST(
+      request({
+        name: "Complex Γ draft",
+        resourceClass: "engineering",
+        action: "read",
+        policy: formalPolicy([overLimit]),
+      }),
+    );
+    const complexityBody = (await complexity.json()) as { error: { details: { code: string }[] } };
+    expect(complexity.status).toBe(400);
+    expect(complexityBody.error.details).toContainEqual(
+      expect.objectContaining({ code: "LIMIT_EXCEEDED" }),
+    );
+
+    const invalidId = randomUUID();
+    db.sqlite
+      .prepare(
+        "INSERT INTO mcac_policy_drafts(id,name,resource_class,action,policy_json,status,validation_report,created_by,updated_by,created_at,updated_at) VALUES(?,?,?,?,?,'DRAFT','[]',?,?,?,?)",
+      )
+      .run(
+        invalidId,
+        "Invalid persisted Γ",
+        "engineering",
+        "read",
+        JSON.stringify(formalPolicy([{ ...constraint("stored-bad"), extra: true }])),
+        sa.id,
+        sa.id,
+        db.now(),
+        db.now(),
+      );
+    const invalidReadiness = await mcacPolicies.PATCH(
+      request({ id: invalidId, operation: "validate" }, "PATCH"),
+    );
+    const invalidReadinessBody = (await invalidReadiness.json()) as {
+      data: {
+        status: string;
+        gammaValidation: { valid: boolean; errors: { code: string; path: string }[] };
+      };
+    };
+    expect(invalidReadinessBody.data.status).toBe("BLOCKED");
+    expect(invalidReadinessBody.data.gammaValidation.valid).toBe(false);
+    expect(invalidReadinessBody.data.gammaValidation.errors).toContainEqual(
+      expect.objectContaining({ code: "UNKNOWN_FIELD", path: "$.consistencyConstraints[0].extra" }),
+    );
+
+    const legacyNoGamma = await mcacPolicies.POST(
+      request({
+        name: "Legacy compatible draft",
+        resourceClass: "engineering",
+        action: "read",
+        policy: formalPolicy([], false),
+      }),
+    );
+    expect(legacyNoGamma.status).toBe(201);
+    const legacyBody = (await legacyNoGamma.json()) as { data: { id: string } };
+    const legacyReadiness = await mcacPolicies.PATCH(
+      request({ id: legacyBody.data.id, operation: "validate" }, "PATCH"),
+    );
+    const legacyReadinessBody = (await legacyReadiness.json()) as {
+      data: { gammaValidation: { valid: boolean; errors: unknown[] } };
+    };
+    expect(legacyReadinessBody.data.gammaValidation).toEqual(
+      expect.objectContaining({ valid: true, errors: [] }),
+    );
+    const legacyDeclaration = await mcacPolicies.POST(
+      request({
+        name: "Legacy declaration with Γ disabled",
+        resourceClass: "engineering",
+        action: "read",
+        policy: formalPolicy([{ id: "legacy-only", items: ["network"] }], false),
+      }),
+    );
+    expect(legacyDeclaration.status).toBe(201);
+  });
   it("routes permission requests for review and applies approved direct grants", async () => {
     auth.actor = {
       id: employeeId,
@@ -1100,5 +1400,326 @@ describe("SQLite route integration workflows", () => {
     expect(
       Number((db.sqlite.prepare("SELECT COUNT(*) n FROM scenario_runs").get() as { n: number }).n),
     ).toBe(12);
+  });
+
+  it("runs isolated formal research fixtures as admin without persisting authorization records", async () => {
+    auth.actor = null;
+    expect((await mcacResearch.GET()).status).toBe(200);
+    auth.actor = { ...admin, roles: ["Employee"] };
+    expect((await mcacResearch.GET()).status).toBe(200);
+    const forbidden = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        body: JSON.stringify({ action: "run", scenarioId: "normal-access" }),
+      }),
+    );
+    expect(forbidden.status).toBe(200);
+
+    auth.actor = admin;
+    const before = {
+      access: Number((db.sqlite.prepare("SELECT COUNT(*) n FROM access_requests").get() as { n: number }).n),
+      decisions: Number((db.sqlite.prepare("SELECT COUNT(*) n FROM authorization_decisions").get() as { n: number }).n),
+      audits: Number((db.sqlite.prepare("SELECT COUNT(*) n FROM audit_events").get() as { n: number }).n),
+    };
+    const unknown = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "run", scenarioId: "not-a-fixture" }),
+      }),
+    );
+    expect(unknown.status).toBe(404);
+
+    const listing = await mcacResearch.GET();
+    const listingBody = (await listing.json()) as { data: { scenarios: { id: string }[] } };
+    expect(listingBody.data.scenarios).toHaveLength(11);
+    const { evaluateMcac } = await import("./mcac/decision");
+    const { getResearchScenario } = await import("./mcac/research-fixtures");
+    for (const scenario of listingBody.data.scenarios) {
+      const response = await mcacResearch.POST(
+        new Request("http://localhost/api/admin/mcac-research", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "run", scenarioId: scenario.id }),
+        }),
+      );
+      expect(response.status, scenario.id).toBe(200);
+      const body = (await response.json()) as {
+        data: {
+          synthetic: boolean;
+          evaluator: string;
+          runId: string;
+          result: ReturnType<typeof evaluateMcac>;
+        };
+      };
+      expect(body.data.synthetic).toBe(true);
+      expect(body.data.evaluator).toBe("lib/mcac/decision.ts:evaluateMcac");
+      expect(body.data.result.trace.requestId).toBe(`synthetic-${scenario.id}`);
+      expect(body.data.result).toEqual(evaluateMcac(getResearchScenario(scenario.id)!.input));
+    }
+
+    const initial = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "run", scenarioId: "normal-access" }),
+      }),
+    );
+    const initialBody = (await initial.json()) as {
+      data: {
+        runId: string;
+        policy: import("./mcac/types").PolicyVersion;
+        result: ReturnType<typeof evaluateMcac>;
+      };
+    };
+    const replay = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "replay",
+          scenarioId: "normal-access",
+          runId: initialBody.data.runId,
+          policyVersion: initialBody.data.policy.version,
+        }),
+      }),
+    );
+    expect(replay.status).toBe(200);
+    const replayBody = (await replay.json()) as {
+      data: {
+        replay: {
+          verified: boolean;
+          originalDecision: string;
+          replayedDecision: string;
+          reasons: string[];
+          gammaTraceComparison: { matches: boolean };
+        };
+      };
+    };
+    expect(replayBody.data.replay).toMatchObject({
+      verified: true,
+      originalDecision: "ALLOW",
+      replayedDecision: "ALLOW",
+      reasons: [],
+      gammaTraceComparison: { matches: true },
+    });
+
+    const { replayResearchRun, rememberResearchRun } = await import("./mcac/research-run-store");
+    const { replayTrace } = await import("./mcac/replay");
+    const { hashTrace } = await import("./mcac/trace");
+    const oldTraceRecord = Object.fromEntries(
+      Object.entries(initialBody.data.result.trace).filter(([key]) => key !== "hash"),
+    ) as Omit<typeof initialBody.data.result.trace, "hash">;
+    const changedTraceRecord = { ...oldTraceRecord, decision: "DENY" as const };
+    const changedTrace = { ...changedTraceRecord, hash: hashTrace(changedTraceRecord) };
+    const originalRun = rememberResearchRun("normal-access", initialBody.data.result.trace);
+    const failedReplay = replayResearchRun(
+      originalRun,
+      initialBody.data.policy,
+      (_trace, policy) => replayTrace(changedTrace, policy).trace,
+    );
+    expect(failedReplay.verified).toBe(false);
+    expect(failedReplay.reasons).toContain(
+      "REPLAY_VERIFICATION_FAILED: Replay did not reproduce the recorded authorization result",
+    );
+    expect(failedReplay.gammaTraceMatches).toBe(false);
+
+    const unsupportedPolicy = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "replay",
+          scenarioId: "normal-access",
+          runId: initialBody.data.runId,
+          policyVersion: "unpublished-or-unknown-policy",
+        }),
+      }),
+    );
+    expect(unsupportedPolicy.status).toBe(409);
+    const unknownReplayScenario = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "replay",
+          scenarioId: "not-a-fixture",
+          runId: initialBody.data.runId,
+          policyVersion: initialBody.data.policy.version,
+        }),
+      }),
+    );
+    expect(unknownReplayScenario.status).toBe(404);
+    const arbitraryInput = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "replay",
+          scenarioId: "normal-access",
+          runId: initialBody.data.runId,
+          policyVersion: initialBody.data.policy.version,
+          context: { injected: true },
+        }),
+      }),
+    );
+    expect(arbitraryInput.status).toBe(400);
+    expect(Number((db.sqlite.prepare("SELECT COUNT(*) n FROM access_requests").get() as { n: number }).n)).toBe(before.access);
+    expect(Number((db.sqlite.prepare("SELECT COUNT(*) n FROM authorization_decisions").get() as { n: number }).n)).toBe(before.decisions);
+    expect(Number((db.sqlite.prepare("SELECT COUNT(*) n FROM audit_events").get() as { n: number }).n)).toBe(before.audits);
+  });
+
+  it("does not read live session state for the isolated research route", async () => {
+    auth.actor = null;
+    const actorSpy = vi.spyOn(await import("./auth"), "currentActor");
+    await mcacResearch.GET();
+    const post = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "run", scenarioId: "normal-access" }),
+      }),
+    );
+    expect(post.status).toBe(200);
+    const runBody = (await post.json()) as { data: { runId: string; policy: { version: string } } };
+    const replay = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "replay",
+          scenarioId: "normal-access",
+          runId: runBody.data.runId,
+          policyVersion: runBody.data.policy.version,
+        }),
+      }),
+    );
+    expect(replay.status).toBe(200);
+    expect(actorSpy).not.toHaveBeenCalled();
+    actorSpy.mockRestore();
+  });
+
+  it("compares only selected server fixtures and derives metrics from actual evaluator results", async () => {
+    auth.actor = null;
+    const actorSpy = vi.spyOn(await import("./auth"), "currentActor");
+    const before = {
+      access: Number((db.sqlite.prepare("SELECT COUNT(*) n FROM access_requests").get() as { n: number }).n),
+      decisions: Number((db.sqlite.prepare("SELECT COUNT(*) n FROM authorization_decisions").get() as { n: number }).n),
+    };
+    const response = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "compare", scenarioIds: ["normal-access", "gamma-violated"] }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      data: {
+        results: {
+          rbac: { decision: string };
+          mcac: { trace: { baseline: boolean }; policyVersion: string; gamma: { constraints: { outcome: string }[] } };
+        }[];
+        metrics: { totalScenarios: number; decisionDifferenceCount: number; mcacRestrictionCount: number; synthetic: boolean };
+      };
+    };
+    expect(body.data.results).toHaveLength(2);
+    expect(body.data.results[0].rbac.decision).toBe("ALLOW");
+    expect(body.data.results[0].mcac.trace.baseline).toBe(true);
+    expect(body.data.results[0].mcac.policyVersion).toBe("mcac-fixed-synthetic-research-policy-v1");
+    expect(body.data.results[1].mcac.gamma.constraints[0].outcome).toBe("VIOLATED");
+    expect(body.data.metrics).toMatchObject({ totalScenarios: 2, decisionDifferenceCount: 1, mcacRestrictionCount: 1 });
+    expect(body.data.metrics.synthetic).toBe(true);
+    expect(actorSpy).not.toHaveBeenCalled();
+    expect(Number((db.sqlite.prepare("SELECT COUNT(*) n FROM access_requests").get() as { n: number }).n)).toBe(before.access);
+    expect(Number((db.sqlite.prepare("SELECT COUNT(*) n FROM authorization_decisions").get() as { n: number }).n)).toBe(before.decisions);
+
+    const invalid = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "compare", scenarioIds: ["normal-access", "injected-context"] }),
+      }),
+    );
+    expect(invalid.status).toBe(404);
+    actorSpy.mockRestore();
+  });
+
+  it("surfaces changed replay decisions and Γ traces as failed route results", async () => {
+    const { getResearchScenario } = await import("./mcac/research-fixtures");
+    const { evaluateMcac } = await import("./mcac/decision");
+    const { rememberResearchRun } = await import("./mcac/research-run-store");
+    const scenario = getResearchScenario("gamma-satisfied")!;
+    const original = evaluateMcac(scenario.input);
+    const run = rememberResearchRun(scenario.id, original.trace);
+    const replayModule = await import("./mcac/replay");
+    const replaySpy = vi.spyOn(replayModule, "replayTrace");
+    const changedDecision = {
+      ...original,
+      decision: "DENY" as const,
+      trace: { ...original.trace, decision: "DENY" as const, hash: "changed-decision-hash" },
+    };
+    replaySpy.mockReturnValueOnce(changedDecision);
+    const decisionResponse = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "replay",
+          scenarioId: scenario.id,
+          runId: run.runId,
+          policyVersion: scenario.input.policy.version,
+        }),
+      }),
+    );
+    const decisionBody = (await decisionResponse.json()) as {
+      data: { replay: { verified: boolean; originalDecision: string; replayedDecision: string; reasons: string[] } };
+    };
+    expect(decisionBody.data.replay).toMatchObject({
+      verified: false,
+      originalDecision: original.decision,
+      replayedDecision: "DENY",
+    });
+    expect(decisionBody.data.replay.reasons).toContain("ORIGINAL_DECISION_MISMATCH");
+    expect(decisionBody.data.replay.reasons).toContain("ORIGINAL_TRACE_HASH_MISMATCH");
+
+    const gammaRun = rememberResearchRun(scenario.id, original.trace);
+    const changedGamma = {
+      ...original.trace.gamma!,
+      constraints: original.trace.gamma!.constraints.map((constraint, index) =>
+        index === 0 ? { ...constraint, outcome: "VIOLATED" as const } : constraint,
+      ),
+    };
+    replaySpy.mockReturnValueOnce({
+      ...original,
+      trace: { ...original.trace, gamma: changedGamma, hash: "changed-gamma-hash" },
+    });
+    const gammaResponse = await mcacResearch.POST(
+      new Request("http://localhost/api/admin/mcac-research", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "replay",
+          scenarioId: scenario.id,
+          runId: gammaRun.runId,
+          policyVersion: scenario.input.policy.version,
+        }),
+      }),
+    );
+    const gammaBody = (await gammaResponse.json()) as {
+      data: {
+        replay: {
+          verified: boolean;
+          reasons: string[];
+          gammaTraceComparison: { matches: boolean; replayed: unknown };
+        };
+      };
+    };
+    expect(gammaBody.data.replay.verified).toBe(false);
+    expect(gammaBody.data.replay.reasons).toContain("GAMMA_TRACE_MISMATCH");
+    expect(gammaBody.data.replay.reasons).toContain("ORIGINAL_TRACE_HASH_MISMATCH");
+    expect(gammaBody.data.replay.gammaTraceComparison.matches).toBe(false);
+    expect(gammaBody.data.replay.gammaTraceComparison.replayed).toEqual(changedGamma);
+    replaySpy.mockRestore();
   });
 });

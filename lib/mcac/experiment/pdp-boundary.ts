@@ -7,19 +7,12 @@ export type PdpCallResult<T extends PdpEvaluation> = Readonly<{
   evaluation: T;
 }>;
 
-/**
- * Local PEP→PDP call used by the synthetic harness. Request preparation,
- * in-memory PIP lookup (for baseline-authorized calls), PDP evaluation, and
- * pre-return trace append all occur inside the timed boundary. The PEP gets
- * only the decision. Report generation and durable artifact writes are outside.
- */
+
 export function callLocalPdp<T extends PdpEvaluation>(args: {
   request: AuthorizationInput;
   prepareRequest?: (request: AuthorizationInput) => AuthorizationInput;
   shouldCollectContext?: boolean;
-  collectContext: (
-    request: AuthorizationInput,
-  ) => Readonly<{
+  collectContext: (request: AuthorizationInput) => Readonly<{
     context: ContextEvidence;
     consistencyEvidence: AuthorizationInput["consistencyEvidence"];
   }>;
@@ -33,7 +26,8 @@ export function callLocalPdp<T extends PdpEvaluation>(args: {
     if (request.baselinePermission && args.shouldCollectContext !== false)
       request = { ...request, ...args.collectContext(request) };
     evaluation = args.evaluate(request);
-    if (evaluation.trace) args.appendTrace(evaluation.trace);
+    if (evaluation.trace) 
+      args.appendTrace(evaluation.trace);
     return evaluation.decision;
   }, args.clock);
   return { measurement, evaluation: evaluation! };

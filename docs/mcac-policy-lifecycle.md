@@ -2,9 +2,9 @@
 
 ## Implemented boundary
 
-Formal policy drafts are stored separately from the mutable legacy `policies` table. A draft has an explicit resource-class/action scope, author, status, JSON policy document, and readiness report. Only a Super Admin may list or create drafts, edit a draft, or request a readiness check; these checks are enforced in `app/api/admin/mcac-policies/route.ts`.
+Formal policy drafts are stored separately from the mutable legacy `policies` table. A draft has an explicit resource-class/action scope, author, status, JSON policy document, and readiness report. Only a Super Admin may list or create drafts, edit a draft, or request a readiness check; these checks are enforced in `app/api/admin/mcac-policies/route.ts`. Draft create/edit and readiness now select AST-bearing Γ entries and use the shared `validateGammaConstraints` validator. The JSON AST is stored without normalization or field dropping; legacy `{id,items}` declarations remain distinguishable and are not treated as AST constraints.
 
-The implemented status column admits the proposed states (`DRAFT`, `VALIDATED`, `PUBLISHED`, `ACTIVE`, `RETIRED`) so future transitions can be added without conflating drafts and immutable snapshots. Current API operations create/edit only `DRAFT` records. Readiness checks persist a report but return `BLOCKED`; they never promote a draft. There are no publish, activate, retire, delete, or decision-time selection operations yet. Existing `mcac_policy_versions` rows remain read-only in this workspace and retain their existing integrity protections.
+The implemented status column admits the proposed states (`DRAFT`, `VALIDATED`, `PUBLISHED`, `ACTIVE`, `RETIRED`) so future transitions can be added without conflating drafts and immutable snapshots. Current API operations create/edit only `DRAFT` records. Readiness checks persist a report and return `BLOCKED`; they never promote a draft. Γ readiness results include structured validator codes/paths, canonical byte count, and digest when valid, but a valid Γ AST does not make the complete policy ready. The low-level immutable version store now records a Γ AST digest, canonicalization identifier, and evaluator semantics version in AST-bearing snapshots. There is no draft-to-version conversion API and no publish, activate, retire, delete, or decision-time selection operation.
 
 ## Proposed lifecycle and authority
 
@@ -25,11 +25,11 @@ The existing formal model locates a profile by `request.resourceClass` and appli
 
 The engine performs runtime checks in `lib/mcac/decision.ts:validateModelPolicy` and `validateCondition`, but those checks are private and are not a complete publication validator. `lib/mcac/types.ts` declares the supported comparator union; `lib/mcac/conditions.ts` implements those operators. However, `docs/mcac-author-decisions.md` records that the paper does not say this list is exhaustive or fully define operand and boundary semantics. The readiness check therefore blocks conditional policies pending a comparator grammar decision.
 
-Γ is represented only as constraint IDs and item lists, while evaluation still accepts externally computed Boolean `ConsistencyEvidence`. The approved scope permits same-category or cross-category references. Drafts declaring constraints remain blocked because the trusted predicate DSL's comparison operators, typed operand grammar, and AST contract are not yet specified. Caller Booleans are not sufficient evidence for publication.
+The approved Γ AST, shared strict validator, evaluator, and effect propagation are implemented in the MCAC library. Draft create/edit rejects malformed AST-bearing constraints with stable validation codes and paths; readiness repeats validation and reports its result, including the feature switch and canonical size. Legacy `{id,items}` declarations remain distinct from AST Γ entries. Publication remains unavailable, and the legacy `evaluateAccess` path is unchanged.
 
 Θ mappings are validated in `lib/mcac/theta-validation.ts` at draft readiness and evaluator boundaries. Dynamic thresholds require Θ enabled, finite numeric values, canonical keys only, and complete coverage of `corporate`, `vpn`, `known`, and `unknown`. Degraded network evidence still makes the condition indeterminate; an impossible missing runtime entry raises an explicit policy-integrity error without fallback.
 
-The current readiness report is explicitly a gate, not a complete formal validator. It does not return `VALIDATED`; publication and activation remain unavailable until validation covers the complete evaluator contract, Γ predicate grammar is approved and implemented, and other formal semantics are resolved.
+The current readiness report is explicitly a gate, not a complete formal validator. It does not return `VALIDATED`; publication and activation remain unavailable until validation covers the complete policy/evaluator contract and remaining formal prerequisites, including the exhaustive condition comparator grammar, are resolved. A successful Γ-specific validation result is only one input to this gate.
 
 ## Minimum future activation schema
 
