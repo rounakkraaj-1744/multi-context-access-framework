@@ -1,18 +1,17 @@
-import {existsSync} from "node:fs";
-import {loadEnvFile} from "node:process";
+import { existsSync } from "node:fs";
+import { loadEnvFile } from "node:process";
 
-for(const file of [".env.local",".env"])
-    if(existsSync(file))
-        loadEnvFile(file);
+for (const file of [".env.local", ".env"]) if (existsSync(file)) loadEnvFile(file);
 
-const {initialize} = await import("../lib/seed.ts");
+const { initialize } = await import("../lib/seed.ts");
 const accounts = initialize();
 
 console.log("MCAF schema and development role templates are ready.");
-if(accounts.superAdminEmail)
-    console.log(`Super Admin account is configured: ${accounts.superAdminEmail}`);
+if (accounts.superAdminEmail)
+  console.log(`Super Admin account is configured: ${accounts.superAdminEmail}`);
 
-if(accounts.adminEmail)
-    console.log(`Admin account is configured: ${accounts.adminEmail}`);
+if (accounts.adminEmail) console.log(`Admin account is configured: ${accounts.adminEmail}`);
 
-console.log("Existing matching accounts are left unchanged. Development seed passwords are listed in .env.example; use them only for local setup.");
+console.log(
+  "Existing matching accounts are left unchanged. Development seed passwords are listed in .env.example; use them only for local setup.",
+);

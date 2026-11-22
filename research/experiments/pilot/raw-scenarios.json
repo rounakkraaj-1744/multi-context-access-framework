@@ -54,66 +54,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -126,9 +99,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -151,11 +122,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -400,66 +367,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -472,9 +412,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -497,11 +435,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -746,66 +680,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -818,9 +725,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -843,11 +748,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -1092,66 +993,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -1164,9 +1038,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -1189,11 +1061,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -1438,66 +1306,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -1510,9 +1351,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -1535,11 +1374,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -1784,66 +1619,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -1856,9 +1664,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -1881,11 +1687,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -2130,66 +1932,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -2202,9 +1977,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -2227,11 +2000,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -2476,66 +2245,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -2548,9 +2290,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -2573,11 +2313,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -2822,66 +2558,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -2894,9 +2603,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -2919,11 +2626,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -3168,66 +2871,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -3240,9 +2916,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -3265,11 +2939,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -3514,66 +3184,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -3586,9 +3229,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -3611,11 +3252,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -3860,66 +3497,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -3932,9 +3542,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -3957,11 +3565,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -4206,66 +3810,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -4278,9 +3855,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -4303,11 +3878,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -4552,66 +4123,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -4624,9 +4168,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -4649,11 +4191,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -4898,66 +4436,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -4970,9 +4481,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -4995,11 +4504,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -5244,66 +4749,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -5316,9 +4794,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -5341,11 +4817,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -5590,66 +5062,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -5662,9 +5107,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -5687,11 +5130,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -5936,66 +5375,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -6008,9 +5420,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -6033,11 +5443,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -6282,66 +5688,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -6354,9 +5733,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -6379,11 +5756,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -6628,66 +6001,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -6700,9 +6046,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -6725,11 +6069,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -6974,66 +6314,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -7046,9 +6359,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -7071,11 +6382,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -7320,66 +6627,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -7392,9 +6672,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -7417,11 +6695,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -7666,66 +6940,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -7738,9 +6985,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -7763,11 +7008,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
@@ -8012,66 +7253,39 @@
         "consistencyConstraints": [
           {
             "id": "pilot-time",
-            "items": [
-              "time",
-              "frequency"
-            ]
+            "items": ["time", "frequency"]
           },
           {
             "id": "pilot-location",
-            "items": [
-              "location",
-              "frequency"
-            ]
+            "items": ["location", "frequency"]
           },
           {
             "id": "pilot-network",
-            "items": [
-              "network",
-              "frequency"
-            ]
+            "items": ["network", "frequency"]
           },
           {
             "id": "pilot-device",
-            "items": [
-              "device",
-              "frequency"
-            ]
+            "items": ["device", "frequency"]
           },
           {
             "id": "pilot-session",
-            "items": [
-              "session",
-              "network"
-            ]
+            "items": ["session", "network"]
           },
           {
             "id": "pilot-frequency",
-            "items": [
-              "frequency",
-              "network"
-            ]
+            "items": ["frequency", "network"]
           },
           {
             "id": "pilot-history",
-            "items": [
-              "history",
-              "network"
-            ]
+            "items": ["history", "network"]
           },
           {
             "id": "pilot-navigation",
-            "items": [
-              "navigation",
-              "network"
-            ]
+            "items": ["navigation", "network"]
           },
           {
             "id": "pilot-request",
-            "items": [
-              "request",
-              "network"
-            ]
+            "items": ["request", "network"]
           }
         ],
         "expectedTransitions": [
@@ -8084,9 +7298,7 @@
           {
             "id": "main",
             "resourceClass": "payroll",
-            "actions": [
-              "export"
-            ],
+            "actions": ["export"],
             "environmental": [
               {
                 "id": "work-window",
@@ -8109,11 +7321,7 @@
                 "id": "allowed-network",
                 "item": "network",
                 "comparator": "in",
-                "parameter": [
-                  "corporate",
-                  "vpn",
-                  "known"
-                ],
+                "parameter": ["corporate", "vpn", "known"],
                 "strength": "soft"
               }
             ],
