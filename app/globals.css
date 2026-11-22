@@ -360,6 +360,21 @@ a {
 .nav-list {
   display: grid;
   gap: 4px;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+}
+.nav-group {
+  display: grid;
+  gap: 4px;
+}
+.nav-group-title {
+  padding: 12px 10px 3px;
+  color: #8296a8;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 .nav-item {
   height: 38px;
@@ -1269,9 +1284,18 @@ tbody tr:hover {
   .nav-list {
     height: 50px;
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start;
     align-items: center;
     gap: 1px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .nav-group {
+    display: contents;
+  }
+  .nav-group-title {
+    display: none;
   }
   .nav-item {
     height: 45px;
@@ -1280,7 +1304,8 @@ tbody tr:hover {
     justify-content: center;
     gap: 2px;
     font-size: 8px;
-    flex: 1;
+    flex: 0 0 74px;
+    white-space: nowrap;
   }
   .nav-icon {
     font-size: 14px;

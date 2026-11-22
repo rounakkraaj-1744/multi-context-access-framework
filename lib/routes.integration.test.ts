@@ -1404,16 +1404,16 @@ describe("SQLite route integration workflows", () => {
 
   it("runs isolated formal research fixtures as admin without persisting authorization records", async () => {
     auth.actor = null;
-    expect((await mcacResearch.GET()).status).toBe(200);
+    expect((await mcacResearch.GET()).status).toBe(401);
     auth.actor = { ...admin, roles: ["Employee"] };
-    expect((await mcacResearch.GET()).status).toBe(200);
+    expect((await mcacResearch.GET()).status).toBe(403);
     const forbidden = await mcacResearch.POST(
       new Request("http://localhost/api/admin/mcac-research", {
         method: "POST",
         body: JSON.stringify({ action: "run", scenarioId: "normal-access" }),
       }),
     );
-    expect(forbidden.status).toBe(200);
+    expect(forbidden.status).toBe(403);
 
     auth.actor = admin;
     const before = {
@@ -1570,7 +1570,7 @@ describe("SQLite route integration workflows", () => {
   });
 
   it("does not read live session state for the isolated research route", async () => {
-    auth.actor = null;
+    auth.actor = admin;
     const actorSpy = vi.spyOn(await import("./auth"), "currentActor");
     await mcacResearch.GET();
     const post = await mcacResearch.POST(
@@ -1600,7 +1600,7 @@ describe("SQLite route integration workflows", () => {
   });
 
   it("compares only selected server fixtures and derives metrics from actual evaluator results", async () => {
-    auth.actor = null;
+    auth.actor = admin;
     const actorSpy = vi.spyOn(await import("./auth"), "currentActor");
     const before = {
       access: Number((db.sqlite.prepare("SELECT COUNT(*) n FROM access_requests").get() as { n: number }).n),
@@ -1646,6 +1646,7 @@ describe("SQLite route integration workflows", () => {
   });
 
   it("surfaces changed replay decisions and Γ traces as failed route results", async () => {
+    auth.actor = admin;
     const { getResearchScenario } = await import("./mcac/research-fixtures");
     const { evaluateMcac } = await import("./mcac/decision");
     const { rememberResearchRun } = await import("./mcac/research-run-store");

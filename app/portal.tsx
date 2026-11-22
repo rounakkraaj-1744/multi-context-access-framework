@@ -1,7 +1,8 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any -- role-specific API payloads are rendered in this compact portal component. */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import UserDetailPanel from "@/app/user-detail-panel";
 type Actor = {
   id: string;
@@ -40,66 +41,128 @@ const glyph: Record<string, string> = {
   Policies: "⌘",
   "MCAC drafts": "⌘",
   "Permission requests": "✓",
+  "Research Overview": "Γ",
+  "Scenario Explorer": "⌕",
+  "Context Inspector": "⌘",
+  "Γ Consistency Inspector": "Γ",
+  "Θ Threshold Inspector": "Θ",
+  "RBAC vs MCAC": "⇄",
+  "Trace Explorer & Replay": "↻",
+  "Research Policy": "⌘",
+  Architecture: "⌂",
+  Methodology: "≡",
+  "Research Paper": "▤",
+  "About Project": "ⓘ",
 };
-const adminNav = [
-  "Overview",
-  "People",
-  "Approvals",
-  "Permission requests",
-  "Sessions",
-  "Decisions",
-  "Alerts",
-  "Incidents",
-  "Context lab",
-  "Formal MCAC Lab",
-  "Audit",
+type PortalRole = "Super Admin" | "Admin" | "Manager" | "Employee";
+type NavGroup = { title: string; items: string[] };
+const researchSections = new Set(["Research Overview", "Scenario Explorer", "Context Inspector", "Γ Consistency Inspector", "Θ Threshold Inspector", "RBAC vs MCAC", "Trace Explorer & Replay", "Research Policy"]);
+const researchInformationSections = new Set(["Architecture", "Methodology", "Research Paper", "About Project"]);
+const employeeNav: NavGroup[] = [
+  { title: "Overview", items: ["Overview"] },
+  { title: "My workspace", items: ["Resources", "Access history", "Profile", "Notifications"] },
 ];
-const superNav = [
-  "Overview",
-  "People",
-  "Approvals",
-  "Permission requests",
-  "Sessions",
-  "Decisions",
-  "Alerts",
-  "Incidents",
-  "Roles",
-  "Permissions",
-  "Policies",
-  "MCAC drafts",
-  "Context lab",
-  "Formal MCAC Lab",
-  "Audit",
+const managerNav: NavGroup[] = [
+  { title: "Overview", items: ["Overview"] },
+  { title: "My workspace", items: ["Resources", "Access history", "Profile", "Notifications"] },
 ];
-const userNav = ["Overview", "Resources", "Access history", "Profile", "Notifications"];
+const researchNav: NavGroup[] = [
+  {
+    title: "Research Lab",
+    items: [
+      "Research Overview",
+      "Scenario Explorer",
+      "Context Inspector",
+      "Γ Consistency Inspector",
+      "Θ Threshold Inspector",
+      "RBAC vs MCAC",
+      "Trace Explorer & Replay",
+      "Research Policy",
+    ],
+  },
+  { title: "Research Information", items: ["Architecture", "Methodology", "Research Paper", "About Project"] },
+];
+const adminNav: NavGroup[] = [
+  { title: "Overview", items: ["Overview"] },
+  { title: "Administration", items: ["People", "Approvals", "Permission requests", "Resources", "MCAC drafts"] },
+  { title: "Decisions & Audit", items: ["Decisions", "Sessions", "Alerts", "Incidents", "Context lab", "Audit"] },
+  ...researchNav,
+];
+const superNav: NavGroup[] = [
+  { title: "Overview", items: ["Overview"] },
+  { title: "Administration", items: ["People", "Approvals", "Permission requests", "Resources", "Roles", "Permissions", "Policies", "MCAC drafts"] },
+  { title: "Decisions & Audit", items: ["Decisions", "Sessions", "Alerts", "Incidents", "Context lab", "Audit"] },
+  ...researchNav,
+];
+const sectionPaths: Readonly<Record<string, string>> = {
+  Overview: "/portal",
+  People: "/portal/users",
+  Approvals: "/portal/approvals",
+  "Permission requests": "/portal/permission-requests",
+  Resources: "/portal/resources",
+  Policies: "/portal/policies",
+  "MCAC drafts": "/portal/mcac-drafts",
+  Decisions: "/portal/decisions",
+  Sessions: "/portal/sessions",
+  Alerts: "/portal/alerts",
+  Incidents: "/portal/incidents",
+  Audit: "/portal/audit",
+  "Context lab": "/portal/context-lab",
+  Roles: "/portal/roles",
+  Permissions: "/portal/permissions",
+  "Access history": "/portal/access-history",
+  "Research Overview": "/portal/research",
+  "Scenario Explorer": "/portal/research/scenarios",
+  "Context Inspector": "/portal/research/context",
+  "Γ Consistency Inspector": "/portal/research/gamma",
+  "Θ Threshold Inspector": "/portal/research/theta",
+  "RBAC vs MCAC": "/portal/research/comparison",
+  "Trace Explorer & Replay": "/portal/research/traces",
+  "Research Policy": "/portal/research/policies",
+  Architecture: "/portal/research/architecture",
+  Methodology: "/portal/research/methodology",
+  "Research Paper": "/portal/research/paper",
+  "About Project": "/portal/research/about",
+  Profile: "/portal/profile",
+  Notifications: "/portal/notifications",
+};
 async function api(url: string, init?: RequestInit): Promise<ApiResult> {
-  const res = await fetch(url, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-    cache: "no-store",
-  });
-  return res.json().catch(() => ({ error: { code: "ERROR", message: "Request failed." } }));
+  try {
+    const res = await fetch(url, {
+      ...init,
+      headers: { "Content-Type": "application/json", ...init?.headers },
+      cache: "no-store",
+    });
+    return res.json().catch(() => ({ error: { code: "ERROR", message: "Request failed." } }));
+  } catch {
+    return { error: { code: "NETWORK_ERROR", message: "The service could not be reached. Try again." } };
+  }
 }
 export default function Portal({
   actor,
   resources,
   notices,
+  initialSection = "Overview",
 }: {
   actor: Actor;
   resources: Resource[];
   notices: Notice[];
+  initialSection?: string;
 }) {
+  const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [section, setSection] = useState("Overview");
+  const [section, setSection] = useState(initialSection);
   const [data, setData] = useState<any>(null);
   const [flash, setFlash] = useState("");
   const [busy, setBusy] = useState(false);
-  const role = actor?.roles.includes("Super Admin")
+  const role: PortalRole = actor?.roles.includes("Super Admin")
     ? "Super Admin"
     : actor?.roles.includes("Admin")
       ? "Admin"
-      : "User";
-  const nav = role === "Super Admin" ? superNav : role === "Admin" ? adminNav : userNav;
+      : actor?.roles.includes("Manager")
+        ? "Manager"
+        : "Employee";
+  const navGroups = role === "Super Admin" ? superNav : role === "Admin" ? adminNav : role === "Manager" ? managerNav : employeeNav;
   function message(m: string) {
     setFlash(m);
     setTimeout(() => setFlash(""), 4500);
@@ -107,7 +170,7 @@ export default function Portal({
   async function load(target = section) {
     setBusy(true);
     let endpoint = "/api/user";
-    if (target === "Overview" && role !== "User") endpoint = "/api/admin/overview";
+    if (target === "Overview" && role !== "Employee" && role !== "Manager") endpoint = "/api/admin/overview";
     else if (target === "People" || target === "Approvals") endpoint = "/api/admin/users";
     else if (target === "Permission requests") endpoint = "/api/user/permission-requests";
     else if (target === "Sessions") endpoint = "/api/admin/sessions";
@@ -116,21 +179,35 @@ export default function Portal({
     else if (target === "Incidents") endpoint = "/api/admin/incidents";
     else if (target === "Audit") endpoint = "/api/admin/audit";
     else if (target === "Context lab") endpoint = "/api/admin/scenarios";
-    else if (target === "Formal MCAC Lab") endpoint = "/api/admin/mcac-research";
+    else if (researchSections.has(target)) endpoint = "/api/admin/mcac-research";
     else if (target === "Roles") endpoint = "/api/admin/roles";
     else if (target === "Permissions") endpoint = "/api/admin/permissions";
     else if (target === "Policies") endpoint = "/api/admin/policies";
     else if (target === "MCAC drafts") endpoint = "/api/admin/mcac-policies";
+    if (researchInformationSections.has(target)) {
+      setBusy(false);
+      return;
+    }
     const result = await api(endpoint);
-    setData(result.data ?? null);
+    setData((old: any) => researchSections.has(target) ? { ...old, ...result.data } : result.data ?? null);
     if (result.error) message(result.error.message);
     setBusy(false);
   }
   async function enter(name: string) {
     setSection(name);
-    setData(null);
+    if (!researchSections.has(name) && !researchInformationSections.has(name)) setData(null);
+    const path = sectionPaths[name] ?? "/portal";
+    router.push(path);
     void load(name);
   }
+  useEffect(() => {
+    // This synchronizes the selected sidebar item with navigation and browser history.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSection(initialSection);
+    if (actor) void load(initialSection);
+    // A route change supplies the next section; load is intentionally invoked for that section.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSection, actor?.id]);
   async function submitAuth(form: FormData) {
     setBusy(true);
     const url = mode === "login" ? "/api/auth/login" : "/api/auth/register";
@@ -347,7 +424,7 @@ export default function Portal({
       </main>
     );
   const content = () => {
-    if (section === "Overview" && role === "User")
+    if (section === "Overview" && (role === "Employee" || role === "Manager"))
       return (
         <>
           <header className="page-heading">
@@ -565,7 +642,7 @@ export default function Portal({
           </div>
         </>
       );
-    if (section === "Access history" && role === "User")
+    if (section === "Access history" && (role === "Employee" || role === "Manager"))
       return (
         <>
           <PageHeading
@@ -667,7 +744,9 @@ export default function Portal({
           superAdmin={role === "Super Admin"}
         />
       );
-    if (section === "Formal MCAC Lab")
+    if (researchInformationSections.has(section))
+      return <ResearchInformationPage section={section} />;
+    if (researchSections.has(section))
       return (
         <FormalMcacResearchPanel
           data={data}
@@ -675,6 +754,8 @@ export default function Portal({
           onReplay={replayFormalResearch}
           onCompare={compareFormalResearch}
           busy={busy}
+          view={section}
+          onNavigate={enter}
         />
       );
     if (section === "Alerts")
@@ -705,7 +786,7 @@ export default function Portal({
         </>
       );
     if (section === "MCAC drafts")
-      return <McacDraftPanel data={data} message={message} reload={() => load(section)} />;
+      return <McacDraftPanel data={data} message={message} reload={() => load(section)} editable={role === "Super Admin"} />;
     return <ScenarioPanel data={data} onRun={scenarios} busy={busy} />;
   };
   return (
@@ -717,20 +798,26 @@ export default function Portal({
             MCAF <small>ACCESS FRAMEWORK</small>
           </span>
         </Link>
-        <div className="workspace-label">WORKSPACE</div>
+        <div className="workspace-label">{role === "Manager" ? "WORKSPACE · TEAM SCOPE UNAVAILABLE" : "WORKSPACE"}</div>
         <div className="nav-list">
-          {nav.map((n) => (
-            <button
-              key={n}
-              onClick={() => void enter(n)}
-              className={`nav-item ${section === n ? "selected" : ""}`}
-            >
-              <span className="nav-icon">{glyph[n]}</span>
-              {n}
-              {n === "Approvals" && data?.pending > 0 && (
-                <span className="nav-count">{data.pending}</span>
-              )}
-            </button>
+          {navGroups.map((group) => (
+            <section className="nav-group" key={group.title} aria-label={group.title}>
+              <div className="nav-group-title">{group.title}</div>
+              {group.items.map((n) => (
+                <button
+                  key={n}
+                  onClick={() => void enter(n)}
+                  className={`nav-item ${section === n ? "selected" : ""}`}
+                  aria-current={section === n ? "page" : undefined}
+                >
+                  <span className="nav-icon">{glyph[n]}</span>
+                  {n}
+                  {n === "Approvals" && data?.pending > 0 && (
+                    <span className="nav-count">{data.pending}</span>
+                  )}
+                </button>
+              ))}
+            </section>
           ))}
         </div>
         <div className="sidebar-bottom">
@@ -768,7 +855,7 @@ export default function Portal({
           </div>
           <div className="topbar-right">
             <span className="environment-badge">
-              <i /> Live workspace
+              <i /> {researchSections.has(section) || researchInformationSections.has(section) ? "Synthetic research" : "Live workspace"}
             </span>
             <button
               className="icon-button notification-button"
@@ -800,9 +887,6 @@ function Metric({
       <div className={`metric-icon ${tone ?? ""}`}>{icon}</div>
       <div className="metric-label">{label}</div>
       <div className="metric-value">{value}</div>
-      <div className="metric-foot">
-        Updated just now <span>↗</span>
-      </div>
     </div>
   );
 }
@@ -1581,12 +1665,16 @@ function FormalMcacResearchPanel({
   onReplay,
   onCompare,
   busy,
+  view,
+  onNavigate,
 }: {
   data: any;
   onRun: (scenarioId: string) => void;
   onReplay: (scenarioId: string, runId: string, policyVersion: string) => void;
   onCompare: (scenarioIds: string[]) => void;
   busy: boolean;
+  view: string;
+  onNavigate: (section: string) => void;
 }) {
   const [selected, setSelected] = useState("");
   const scenarios = data?.scenarios ?? [];
@@ -1601,11 +1689,19 @@ function FormalMcacResearchPanel({
   const validityByKind = new Map(
     (result?.trace?.items ?? []).map((item: any) => [item.kind, item.validityStatus]),
   );
+  const isOverview = view === "Research Overview";
+  const isScenario = view === "Scenario Explorer" || isOverview;
+  const isContext = view === "Context Inspector";
+  const isGamma = view === "Γ Consistency Inspector";
+  const isTheta = view === "Θ Threshold Inspector";
+  const isComparison = view === "RBAC vs MCAC";
+  const isTraces = view === "Trace Explorer & Replay";
+  const isPolicy = view === "Research Policy";
   return (
     <>
       <PageHeading
         label="RESEARCH MODE · SYNTHETIC FIXTURES"
-        title="Formal MCAC research lab"
+        title={view}
         subtitle="Research demonstration: runs the formal evaluateMcac engine on fixed synthetic inputs. It does not authorize access or use live session context."
       />
       <div className="lab-banner">
@@ -1618,7 +1714,31 @@ function FormalMcacResearchPanel({
           </p>
         </div>
       </div>
-      <div className="panel">
+      {isOverview && (
+        <>
+          <div className="metric-grid">
+            <Metric label="Server-defined scenarios" value={String(scenarios.length)} icon="⌕" />
+            <Metric label="Formal evaluator" value="evaluateMcac" icon="Γ" />
+            <Metric label="Policy version" value={data?.policyId ?? "Loading…"} icon="⌘" />
+            <Metric label="Recent in-memory runs" value={String(data?.recentRuns?.length ?? 0)} icon="↻" />
+          </div>
+          <div className="panel">
+            <PanelTitle title="Research demonstration" />
+            <p>This lab executes a fixed formal MCAC evaluator over synthetic context fixtures. It demonstrates baseline RBAC, context validity, Γ consistency, Θ thresholds, decision traces and replay verification.</p>
+            <p className="muted">Recent runs are held in a bounded in-memory store and expire. They are not durable authorization records.</p>
+            <div className="row-actions">
+              <button className="button primary" onClick={() => onNavigate("Scenario Explorer")}>Explore scenarios</button>
+              <button className="button secondary" onClick={() => onNavigate("RBAC vs MCAC")}>Compare RBAC vs MCAC</button>
+            </div>
+          </div>
+          <div className="panel">
+            <PanelTitle title="Recent research runs" />
+            {data?.recentRuns?.length ? <div className="table-wrap"><table><thead><tr><th>RUN</th><th>SCENARIO</th><th>POLICY</th><th>DECISION</th><th>TIME</th></tr></thead><tbody>{data.recentRuns.map((run: any) => <tr key={run.runId}><td><code>{run.runId}</code></td><td>{run.scenarioId}</td><td>{run.policyVersion}</td><td>{run.decision} · severity {run.severity}</td><td>{date(run.createdAt)}</td></tr>)}</tbody></table></div> : <Empty text="No unexpired research runs are in the in-memory store." />}
+          </div>
+        </>
+      )}
+      {isPolicy && <ResearchPolicyPanel policy={data?.policy} policyId={data?.policyId} />}
+      {isScenario && <div className="panel">
         <div className="panel-title">
           <div>
             <h2>Run a formal scenario</h2>
@@ -1652,12 +1772,13 @@ function FormalMcacResearchPanel({
             {busy ? "Comparing…" : "Compare all fixtures: RBAC vs MCAC"}
           </button>
         </div>
-        {scenarios.find((scenario: any) => scenario.id === selected)?.description && (
-          <p className="muted">{scenarios.find((scenario: any) => scenario.id === selected).description}</p>
-        )}
-      </div>
+        {scenarios.find((scenario: any) => scenario.id === selected) && (() => {
+          const selectedFixture = scenarios.find((scenario: any) => scenario.id === selected);
+          return <div className="info-callout"><span>ⓘ</span><div><b>Selected fixture inputs · synthetic</b><p>{selectedFixture.description}</p><p>Baseline permission: {selectedFixture.baselinePermission ? "GRANTED" : "DENIED"} · Resource/action: {selectedFixture.request.resourceClass} / {selectedFixture.request.action}</p><details><summary>Inspect synthetic environmental and behavioral values</summary><pre className="research-json">{JSON.stringify(selectedFixture.context, null, 2)}</pre></details></div></div>;
+        })()}
+      </div>}
 
-      {data?.comparison && (
+      {(isComparison || isOverview) && data?.comparison && (
         <div className="panel">
           <div className="panel-title">
             <div>
@@ -1680,7 +1801,7 @@ function FormalMcacResearchPanel({
               <tbody>
                 {data.comparison.results.map((comparison: any) => (
                   <tr key={comparison.scenario.id}>
-                    <td><b>{comparison.scenario.name}</b><br /><code>{comparison.scenario.id}</code></td>
+                    <td><b>{comparison.scenario.name}</b><br /><code>{comparison.scenario.id}</code><details><summary>Same fixture inputs</summary><p>{comparison.scenario.description}</p><p>Resource/action: {comparison.baseline.resourceClass} / {comparison.baseline.action} · permission: {comparison.baseline.permission} ({comparison.baseline.granted ? "granted" : "not granted"})</p><pre className="research-json">{JSON.stringify(comparison.scenario.context, null, 2)}</pre></details></td>
                     <td>{comparison.rbac.decision}</td>
                     <td>{comparison.mcac.decision} · severity {comparison.mcac.severity}<br /><small>Policy {comparison.mcac.policyVersion}</small></td>
                     <td>{comparison.differs ? "Yes" : "No"}{comparison.restricted ? " · MCAC restricted" : ""}</td>
@@ -1698,9 +1819,9 @@ function FormalMcacResearchPanel({
         </div>
       )}
 
-      {evaluation && result && (
+      {evaluation && result && (isScenario || isOverview || isTraces) && (
         <>
-          <div className="panel">
+          {(isScenario || isOverview) && <div className="panel">
             <div className="panel-title">
               <div>
                 <h2>{evaluation.scenario.name}</h2>
@@ -1726,7 +1847,7 @@ function FormalMcacResearchPanel({
             >
               {busy ? "Replaying…" : "↻ Replay this run"}
             </button>
-          </div>
+          </div>}
 
           {evaluation.replay && (
             <div className="panel">
@@ -1767,7 +1888,7 @@ function FormalMcacResearchPanel({
             </div>
           )}
 
-          <div className="panel">
+          {(isScenario || isOverview) && <div className="panel">
             <PanelTitle title="Synthetic policy and context" />
             <p className="muted">These are fixture inputs. Validity statuses shown here were classified by the formal evaluator.</p>
             <div className="table-wrap">
@@ -1775,9 +1896,9 @@ function FormalMcacResearchPanel({
                 <thead><tr><th>ITEM</th><th>CLASSIFIED STATUS</th><th>SYNTHETIC VALUE</th></tr></thead>
                 <tbody>
                   {contextItems.map((raw: any) => (
-                    <tr key={raw.kind}>
+                  <tr key={raw.kind}>
                       <td>{raw.kind}</td>
-                      <td>{String(validityByKind.get(raw.kind) ?? "not evaluated after baseline denial")}</td>
+                    <td title="Validity status is produced by the formal evaluator">{String(validityByKind.get(raw.kind) ?? "not evaluated after baseline denial")}</td>
                       <td><code>{JSON.stringify(raw.value)}</code></td>
                     </tr>
                   ))}
@@ -1788,9 +1909,9 @@ function FormalMcacResearchPanel({
               <summary>Inspect fixed policy, including Θ mapping and Γ AST</summary>
               <pre className="research-json">{JSON.stringify(evaluation.policy, null, 2)}</pre>
             </details>
-          </div>
+          </div>}
 
-          <div className="panel">
+          {(isScenario || isOverview || isTheta) && <div className="panel">
             <PanelTitle title="Condition outcomes and Θ interactions" />
             {result.conditionEvaluations.length ? (
               <div className="table-wrap">
@@ -1818,9 +1939,9 @@ function FormalMcacResearchPanel({
                 ))}
               </ul>
             ) : <p className="muted">No Θ interactions were evaluated for this result.</p>}
-          </div>
+          </div>}
 
-          <div className="panel">
+          {(isScenario || isOverview || isGamma) && <div className="panel">
             <PanelTitle title="Γ evaluation trace and effects" />
             {result.trace.gamma ? (
               <>
@@ -1864,11 +1985,67 @@ function FormalMcacResearchPanel({
                 ) : <p className="muted">No applicable Γ item effects; constraint outcomes are still traced.</p>}
               </>
             ) : <p className="muted">Γ was not evaluated because baseline permission was denied.</p>}
-          </div>
+          </div>}
         </>
       )}
+      {isContext && <ResearchContextPanel evaluation={evaluation} validityByKind={validityByKind} />}
+      {isGamma && evaluation && <GammaInspector evaluation={evaluation} />}
+      {isTheta && evaluation && <ThetaInspector evaluation={evaluation} />}
+      {isTraces && <ResearchTracePanel runs={data?.recentRuns ?? []} evaluation={evaluation} busy={busy} onReplay={onReplay} />}
+      {isComparison && !data?.comparison && <div className="panel"><Empty text="Run the comparison to generate rows from actual fixture executions." /><button className="button primary" disabled={busy || !scenarios.length} onClick={() => onCompare(scenarios.map((item: any) => item.id))}>Execute fixture comparison</button></div>}
+      {(isContext || isGamma || isTheta || isTraces) && !evaluation && <div className="panel"><Empty text="Run a scenario in Scenario Explorer to inspect actual evaluator evidence and traces." /><button className="button primary" onClick={() => onNavigate("Scenario Explorer")}>Open Scenario Explorer</button></div>}
     </>
   );
+}
+
+export function ResearchContextPanel({ evaluation, validityByKind }: { evaluation: any; validityByKind: Map<any, any> }) {
+  if (!evaluation) return <div className="panel"><Empty text="Execute a fixture to inspect its context evidence." /></div>;
+  const groups = [["Environmental context", Object.values(evaluation.context.environmental)], ["Behavioral context", Object.values(evaluation.context.behavioral)]] as const;
+  return <>
+    <PageHeading label="FIXTURE INPUTS · SYNTHETIC" title="Context Inspector" subtitle="Raw fixture evidence is shown separately from statuses classified by the evaluator." />
+    <div className="lab-banner"><span>ⓘ</span><div><b>Fixture inputs, not live context</b><p>Observation timestamps, source classes and integrity flags are from the selected server-defined fixture. Validity is reported by evaluateMcac.</p></div></div>
+    {groups.map(([title, items]) => <div className="panel" key={title}><PanelTitle title={title} /><div className="table-wrap"><table><thead><tr><th>ATTRIBUTE</th><th>VALUE</th><th>OBSERVED AT</th><th>SOURCE</th><th>INTEGRITY</th><th>VALIDITY</th></tr></thead><tbody>{items.map((raw: any) => <tr key={raw.kind}><td>{raw.kind}</td><td><code>{JSON.stringify(raw.value)}</code></td><td>{raw.observedAt === null ? "Missing" : date(new Date(raw.observedAt).toISOString())}</td><td>{raw.sourceClass ?? "Missing"}</td><td>{raw.integrityFlag}</td><td title="Evaluator-classified validity status">{validityByKind.get(raw.kind) ?? "Not evaluated after baseline denial"}</td></tr>)}</tbody></table></div></div>)}
+    <div className="panel"><PanelTitle title="Requested resource and action" /><p>{evaluation.scenario.request.resourceClass} · {evaluation.scenario.request.action} · baseline permission {evaluation.scenario.baselinePermission ? "PASS" : "DENY"}</p></div>
+  </>;
+}
+
+export function GammaInspector({ evaluation }: { evaluation: any }) {
+  const gamma = evaluation?.result?.trace?.gamma;
+  const astById = new Map((evaluation?.policy?.consistencyConstraints ?? []).map((constraint: any) => [constraint.id, constraint.expression]));
+  return <><PageHeading label="FORMAL TRACE · Γ" title="Γ Consistency Inspector" subtitle="Constraint results and node traces are rendered from the formal evaluator." />
+    <div className="info-callout"><span>ⓘ</span><div><b>Strong Kleene three-valued logic</b><p>SATISFIED, VIOLATED and INDETERMINATE preserve uncertainty. This page does not recalculate Γ.</p></div></div>
+    {!gamma ? <div className="panel"><Empty text="Γ did not run for this result, usually because baseline permission was denied." /></div> : gamma.constraints.map((constraint: any) => <div className="panel" key={constraint.constraintId}><PanelTitle title={constraint.constraintId + " · " + constraint.outcome} /><p>AST digest {constraint.trace.astDigest.hex} · semantics {constraint.trace.evaluatorSemanticsVersion}</p><details><summary>Policy AST</summary><pre className="research-json">{JSON.stringify(astById.get(constraint.constraintId) ?? null, null, 2)}</pre></details><div className="table-wrap"><table><thead><tr><th>NODE PATH</th><th>TYPE</th><th>OUTCOME</th><th>REFERENCED EVIDENCE</th><th>REASON</th><th>CHILD ORDER</th></tr></thead><tbody>{constraint.trace.nodes.map((node: any) => <tr key={node.nodeId}><td><code>{node.nodePath}</code></td><td>{node.nodeType}</td><td>{node.outcome}</td><td>{node.references.map((reference: any) => reference.reference + " · " + reference.itemKind + " · " + reference.evidenceStatus + (reference.reasonCode ? " · " + reference.reasonCode : "")).join("; ") || "—"}</td><td>{node.reasonCodes?.join(", ") || "—"}</td><td><code>{node.childEvaluationOrder.join(" → ") || "—"}</code></td></tr>)}</tbody></table></div></div>)}
+    {gamma?.items?.length > 0 && <div className="panel"><PanelTitle title="Combined item effects and condition propagation" /><div className="table-wrap"><table><thead><tr><th>ITEM</th><th>EFFECT</th><th>CONSTRAINTS</th><th>DEPENDENT CONDITIONS</th></tr></thead><tbody>{gamma.items.map((item: any) => <tr key={item.itemKind}><td>{item.itemKind}</td><td>{item.effect}</td><td>{item.contributingConstraints.map((entry: any) => entry.constraintId + "=" + entry.outcome).join(", ")}</td><td>{item.dependentConditions.map((entry: any) => entry.ruleId + ":" + entry.conditionId + "=" + entry.outcome + " severity " + entry.severity).join("; ") || "None"}</td></tr>)}</tbody></table></div></div>}
+  </>;
+}
+
+export function ThetaInspector({ evaluation }: { evaluation: any }) {
+  const interactions = evaluation?.result?.trace?.interactions?.filter((item: any) => item.kind === "environment_conditioned_threshold") ?? [];
+  const network = evaluation?.context?.environmental?.network;
+  const thresholds = evaluation?.policy?.rules?.flatMap((rule: any) => rule.behavioral.filter((condition: any) => typeof condition.parameter === "object" && condition.parameter?.by === "network").map((condition: any) => ({ rule: rule.id, condition: condition.id, values: condition.parameter.values }))) ?? [];
+  const status = evaluation?.result?.trace?.items?.find((item: any) => item.kind === "network")?.validityStatus;
+  return <><PageHeading label="FORMAL TRACE · Θ" title="Θ Threshold Inspector" subtitle="Threshold selection and interaction outcomes are read from the fixed policy and evaluator trace." />
+    {!evaluation ? <div className="panel"><Empty text="Execute a fixture to inspect its Θ evaluation." /></div> : <><div className="panel"><PanelTitle title="Network evidence and configured thresholds" /><p>Network category: <b>{network?.value ?? "Missing"}</b> · evidence validity: <b>{status ?? "Not evaluated"}</b></p>{thresholds.map((item: any) => <div key={item.rule + ":" + item.condition}><p>{item.rule} / {item.condition}</p><pre className="research-json">{JSON.stringify(item.values, null, 2)}</pre></div>)}</div><div className="panel"><PanelTitle title="Θ evaluator interaction" />{interactions.length ? <ul className="research-list">{interactions.map((item: any) => <li key={item.id}><b>{item.result}</b> · {item.explanation}<br /><small>Inputs: {item.inputReferences.join(", ")}</small></li>)}</ul> : <p className="muted">No threshold interaction was emitted for this result.</p>}<p className="muted">Configured thresholds are policy data. Selected-threshold behavior and condition impact are represented by the interaction and condition trace; the UI does not calculate a threshold.</p></div></>}
+  </>;
+}
+
+function ResearchInformationPage({ section }: { section: string }) {
+  if (section === "Research Paper") return <><PageHeading label="RESEARCH INFORMATION" title={section} subtitle="Supplied manuscript and its stated status." /><div className="panel"><PanelTitle title="Multi-Context Access Control Framework" /><p>Authors: Bhabani Prasad Mishra, Krushna Ch. Sahu, Rounakk R. Sabat, Ansuman Das, and Subhranshu R. Mishra.</p><p>Department of Computer Science and Engineering, NIST University, Berhampur, Odisha, India.</p><p>Publication/submission status is not stated in the supplied PDF.</p><a className="button secondary" href="/api/admin/mcac-research/paper" target="_blank" rel="noreferrer">Open supplied paper PDF</a></div></>;
+  const content: Record<string, { label: string; paragraphs: string[] }> = {
+    Architecture: { label: "FORMAL MODEL OVERVIEW", paragraphs: ["Baseline RBAC checks the permission predicate for the requested resource and action.", "The formal evaluator classifies environmental and behavioral evidence, evaluates declared Γ consistency constraints with three-valued outcomes, and applies Θ network-conditioned thresholds where configured.", "Condition outcomes and severity aggregate into an explainable ALLOW, VERIFY, or DENY decision. Replay verification compares a new evaluation trace with the recorded synthetic run using the existing verifier.", "The research policy is fixed and isolated; it is not activated for live authorization."] },
+    Methodology: { label: "RESEARCH DESIGN", paragraphs: ["The lab uses predefined server-side synthetic fixtures that vary baseline permissions, context validity, Γ relationships, Θ network categories, and requested actions.", "Each comparison executes RBAC and formal MCAC against the same fixture resource/action and baseline permission. MCAC receives the fixture context; baseline RBAC does not.", "Displayed counts summarize only fixture evaluations actually executed in the current research session. Synthetic demonstrations do not establish real-world accuracy or production effectiveness."] },
+    "About Project": { label: "ACADEMIC DEMONSTRATION", paragraphs: ["The Multi-Context Access Control Framework (MCAC) is demonstrated here within the existing MCAF management application.", "The Formal MCAC Research Lab is an isolated synthetic environment for inspecting formal evaluator behavior, consistency constraints (Γ), network-conditioned thresholds (Θ), explainable traces, and replay verification.", "Manager team isolation is not modeled by the current backend; Manager access is limited to supported personal workspace capabilities."] },
+  };
+  const page = content[section];
+  return <><PageHeading label="RESEARCH INFORMATION" title={section} subtitle={page.label} /><div className="panel">{page.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div></>;
+}
+
+function ResearchPolicyPanel({ policy, policyId }: { policy: any; policyId: string }) {
+  return <><PageHeading label="FIXED DEMONSTRATION POLICY" title="Research Policy" subtitle="Inspection only. This policy is not published or activated for live access." />{!policy ? <div className="panel"><Empty text="Fixed policy metadata is loading or unavailable." /></div> : <div className="panel"><PanelTitle title={policyId} /><p>Version {policy.version} · Evaluator: lib/mcac/decision.ts:evaluateMcac · Γ semantics {policy.gammaMetadata?.evaluatorSemanticsVersion ?? "Not declared"} · canonicalization {policy.gammaMetadata?.constraintsDigest?.canonicalizationVersion ?? "Not declared"}</p><p>Resource classes: {Object.keys(policy.resourceProfiles).join(", ")}</p><p>Actions: {[...new Set(policy.rules.flatMap((rule: any) => rule.actions))].join(", ")}</p><p>Γ constraints: {policy.consistencyConstraints.map((constraint: any) => constraint.id).join(", ") || "None"}</p><p>Θ network categories: Corporate, VPN, Known, Unknown · values configured on applicable conditions.</p><details><summary>Inspect fixed formal policy</summary><pre className="research-json">{JSON.stringify(policy, null, 2)}</pre></details></div>}</>;
+}
+
+export function ResearchTracePanel({ runs, evaluation, busy, onReplay }: { runs: any[]; evaluation: any; busy: boolean; onReplay: (scenarioId: string, runId: string, policyVersion: string) => void }) {
+  return <><PageHeading label="BOUNDED IN-MEMORY STORE" title="Trace Explorer & Replay" subtitle="Runs expire from a bounded process-local store; this is not durable replay storage." /><div className="panel"><PanelTitle title="Recent run summaries" />{runs.length ? <div className="table-wrap"><table><thead><tr><th>RUN ID</th><th>SCENARIO</th><th>POLICY</th><th>DECISION</th><th>SEVERITY</th><th>CREATED</th></tr></thead><tbody>{runs.map((run: any) => <tr key={run.runId}><td><code>{run.runId}</code></td><td>{run.scenarioId}</td><td>{run.policyVersion}</td><td>{run.decision}</td><td>{run.severity}</td><td>{date(run.createdAt)}</td></tr>)}</tbody></table></div> : <Empty text="No unexpired runs are currently available." />}</div>{evaluation && <div className="panel"><PanelTitle title="Selected execution trace" /><p>Run {evaluation.runId} · scenario {evaluation.scenario.id} · policy {evaluation.policy.version} · evaluator {evaluation.evaluator}</p><p>Original decision {evaluation.result.decision} · severity {evaluation.result.severity}</p><details><summary>Condition, Γ and Θ trace</summary><pre className="research-json">{JSON.stringify({ conditions: evaluation.result.conditionEvaluations, gamma: evaluation.result.trace.gamma, theta: evaluation.result.trace.interactions }, null, 2)}</pre></details><button className="button secondary" disabled={busy || !evaluation.runId} onClick={() => onReplay(evaluation.scenario.id, evaluation.runId, evaluation.policy.version)}>{busy ? "Replaying…" : "Replay and verify"}</button>{evaluation.replay && <><p className={evaluation.replay.verified ? "research-success" : "research-failure"}>Replay verification: {evaluation.replay.verified ? "VERIFIED" : "FAILED"} · Original {evaluation.replay.originalDecision ?? "Unavailable"} · Replayed {evaluation.replay.replayedDecision ?? "Unavailable"} · Reasons: {evaluation.replay.reasons?.join(", ") || "None"}</p><p>Γ trace comparison: {evaluation.replay.gammaTraceComparison?.matches === null ? "NOT AVAILABLE" : evaluation.replay.gammaTraceComparison?.matches ? "MATCH" : "MISMATCH"}</p><div className="research-replay-grid"><div><h3>Original Γ trace</h3><pre className="research-json">{JSON.stringify(evaluation.replay.gammaTraceComparison?.original ?? null, null, 2)}</pre></div><div><h3>Replayed Γ trace</h3><pre className="research-json">{JSON.stringify(evaluation.replay.gammaTraceComparison?.replayed ?? null, null, 2)}</pre></div></div></>}</div>}</>;
 }
 
 function ManagementPanel({
@@ -2200,10 +2377,12 @@ function McacDraftPanel({
   data,
   message,
   reload,
+  editable,
 }: {
   data: any;
   message: (s: string) => void;
   reload: () => void;
+  editable: boolean;
 }) {
   const [selected, setSelected] = useState<any>(null);
   const [name, setName] = useState("");
@@ -2280,8 +2459,9 @@ function McacDraftPanel({
           </p>
         </div>
       </div>
+      {!editable && <div className="info-callout"><span>ⓘ</span><div><b>Read-only draft visibility</b><p>Draft creation, edits and readiness checks are restricted to Super Admin by the existing server API.</p></div></div>}
       <div className="two-col">
-        <div className="panel">
+        {editable && <div className="panel">
           <PanelTitle title={selected ? "Edit draft" : "Create draft"} />
           <form className="request-form" onSubmit={submit} key={selected?.id ?? "new"}>
             <label>
@@ -2364,7 +2544,7 @@ function McacDraftPanel({
               </div>
             </div>
           )}
-        </div>
+        </div>}
         <div className="panel">
           <PanelTitle title="Drafts and immutable versions" />
           {data?.drafts?.length ? (

@@ -60,6 +60,17 @@ export function findResearchRun(runId: string): ResearchRunRecord | undefined {
   return runs.get(runId);
 }
 
+/** Lists run summaries without exposing the retained trace or synthetic replay inputs. */
+export function listRecentResearchRuns(limit = 20): readonly ResearchRunRecord[] {
+  pruneExpiredRuns();
+  const safeLimit = Math.max(0, Math.min(50, Math.floor(limit)));
+  return Object.freeze(
+    [...runs.values()]
+      .sort((left, right) => right.createdAt - left.createdAt)
+      .slice(0, safeLimit),
+  );
+}
+
 /** Replays only the original server-generated trace using the matching fixed fixture policy. */
 export function replayResearchRun(
   original: ResearchRunRecord,

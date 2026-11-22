@@ -57,7 +57,12 @@ export function compareResearchScenario(scenario: ResearchScenario) {
       : `Both evaluators returned ${rbacDecision} for this synthetic fixture.`;
 
   return Object.freeze({
-    scenario: { id: scenario.id, name: scenario.name },
+    scenario: {
+      id: scenario.id,
+      name: scenario.name,
+      description: scenario.description,
+      context: input.context,
+    },
     baseline: {
       permission: requiredPermission,
       granted: input.baselinePermission,
