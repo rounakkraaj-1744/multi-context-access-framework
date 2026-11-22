@@ -2,13 +2,7 @@
   "seed": 1,
   "instancesPerFamily": 2,
   "families": [
-    [
-      "S1",
-      "Registered device, expected window, corporate network",
-      "benign",
-      "ALLOW",
-      "Both"
-    ],
+    ["S1", "Registered device, expected window, corporate network", "benign", "ALLOW", "Both"],
     [
       "S2",
       "Stolen credential from a new device on an unknown network",
@@ -23,13 +17,7 @@
       "VERIFY (accepted friction)",
       "Environmental"
     ],
-    [
-      "S4",
-      "Unfamiliar network with a known device",
-      "mixed",
-      "VERIFY",
-      "Environmental"
-    ],
+    ["S4", "Unfamiliar network with a known device", "mixed", "VERIFY", "Environmental"],
     [
       "S5",
       "Request outside the configured time window",
@@ -51,13 +39,7 @@
       "DENY by baseline (all systems)",
       "Baseline"
     ],
-    [
-      "S8",
-      "Change in navigation or resource-access pattern",
-      "mixed",
-      "VERIFY",
-      "Behavioral"
-    ],
+    ["S8", "Change in navigation or resource-access pattern", "mixed", "VERIFY", "Behavioral"],
     [
       "S9",
       "Conflicting signals (e.g., known device but inconsistent region)",
@@ -87,10 +69,5 @@
       "Both"
     ]
   ],
-  "degradationRates": [
-    0,
-    0.1,
-    0.2,
-    0.4
-  ]
+  "degradationRates": [0, 0.1, 0.2, 0.4]
 }

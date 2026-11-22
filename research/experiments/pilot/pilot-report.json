@@ -7,54 +7,15 @@
     "policyVersion": "pilot-provisional-v1",
     "generatedAt": "2026-11-16T14:57:19.785Z",
     "seeds": {
-      "calibration": [
-        1,
-        2,
-        3,
-        4,
-        5
-      ],
+      "calibration": [1, 2, 3, 4, 5],
       "test": [
-        101,
-        102,
-        103,
-        104,
-        105,
-        106,
-        107,
-        108,
-        109,
-        110,
-        111,
-        112,
-        113,
-        114,
-        115,
-        116,
-        117,
-        118,
-        119,
-        120,
-        121,
-        122,
-        123,
-        124,
-        125,
-        126,
-        127,
-        128,
-        129,
-        130
+        101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118,
+        119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130
       ]
     },
     "instancesPerFamily": 250,
     "testFamilies": 12,
-    "degradationRates": [
-      0,
-      0.1,
-      0.2,
-      0.4
-    ],
+    "degradationRates": [0, 0.1, 0.2, 0.4],
     "pilot": {
       "instancesPerFamily": 2,
       "latencyWarmups": 2,
@@ -62,15 +23,8 @@
       "runs": 1
     },
     "parameters": {
-      "workHours": [
-        9,
-        17
-      ],
-      "allowedNetworks": [
-        "corporate",
-        "vpn",
-        "known"
-      ],
+      "workHours": [9, 17],
+      "allowedNetworks": ["corporate", "vpn", "known"],
       "frequencyLimits": {
         "corporate": 20,
         "vpn": 10,
@@ -113,73 +67,24 @@
       "passed": true,
       "evidence": {
         "count": 12,
-        "families": [
-          "S1",
-          "S2",
-          "S3",
-          "S4",
-          "S5",
-          "S6",
-          "S7",
-          "S8",
-          "S9",
-          "S10",
-          "S11",
-          "S12"
-        ]
+        "families": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "S12"]
       }
     },
     "S7 baseline denial": {
       "passed": true,
       "evidence": [
-        [
-          "B1",
-          "DENY"
-        ],
-        [
-          "B2",
-          "DENY"
-        ],
-        [
-          "B3",
-          "DENY"
-        ],
-        [
-          "B4",
-          "DENY"
-        ],
-        [
-          "B5",
-          "DENY"
-        ],
-        [
-          "B6",
-          "DENY"
-        ],
-        [
-          "B1",
-          "DENY"
-        ],
-        [
-          "B2",
-          "DENY"
-        ],
-        [
-          "B3",
-          "DENY"
-        ],
-        [
-          "B4",
-          "DENY"
-        ],
-        [
-          "B5",
-          "DENY"
-        ],
-        [
-          "B6",
-          "DENY"
-        ]
+        ["B1", "DENY"],
+        ["B2", "DENY"],
+        ["B3", "DENY"],
+        ["B4", "DENY"],
+        ["B5", "DENY"],
+        ["B6", "DENY"],
+        ["B1", "DENY"],
+        ["B2", "DENY"],
+        ["B3", "DENY"],
+        ["B4", "DENY"],
+        ["B5", "DENY"],
+        ["B6", "DENY"]
       ]
     },
     "labels independent with both counterfactual classes": {
@@ -192,64 +97,28 @@
     "B1/B2 distinguish static environmental policy": {
       "passed": true,
       "evidence": [
-        [
-          "B1",
-          "ALLOW"
-        ],
-        [
-          "B2",
-          "DENY"
-        ],
-        [
-          "B1",
-          "ALLOW"
-        ],
-        [
-          "B2",
-          "DENY"
-        ]
+        ["B1", "ALLOW"],
+        ["B2", "DENY"],
+        ["B1", "ALLOW"],
+        ["B2", "DENY"]
       ]
     },
     "B3/B5 distinguish behavioral ablation": {
       "passed": true,
       "evidence": [
-        [
-          "B3",
-          "ALLOW"
-        ],
-        [
-          "B5",
-          "VERIFY"
-        ],
-        [
-          "B3",
-          "ALLOW"
-        ],
-        [
-          "B5",
-          "VERIFY"
-        ]
+        ["B3", "ALLOW"],
+        ["B5", "VERIFY"],
+        ["B3", "ALLOW"],
+        ["B5", "VERIFY"]
       ]
     },
     "B4/B5 distinguish environmental ablation": {
       "passed": true,
       "evidence": [
-        [
-          "B4",
-          "ALLOW"
-        ],
-        [
-          "B5",
-          "VERIFY"
-        ],
-        [
-          "B4",
-          "ALLOW"
-        ],
-        [
-          "B5",
-          "VERIFY"
-        ]
+        ["B4", "ALLOW"],
+        ["B5", "VERIFY"],
+        ["B4", "ALLOW"],
+        ["B5", "VERIFY"]
       ]
     },
     "B5/B6 distinguish interaction threshold": {
@@ -384,9 +253,7 @@
       }
     }
   },
-  "failures": [
-    "manuscript PEP-to-PDP latency boundary"
-  ],
+  "failures": ["manuscript PEP-to-PDP latency boundary"],
   "blocked": [
     "S9 Table IX conflicting-region semantics require Γ scope clarification",
     "mimic verification probability is unspecified",
@@ -507,41 +374,15 @@
   "latencyMeasurement": {
     "samples": {
       "B1": [
-        0.002334000000018932,
-        0.0003749999999627107,
-        0.0007920000000467553,
-        0.00020800000004328467
+        0.002334000000018932, 0.0003749999999627107, 0.0007920000000467553, 0.00020800000004328467
       ],
       "B2": [
-        0.0009160000000747459,
-        0.0008749999999508873,
-        0.0007919999999330685,
-        0.0005830000000059954
+        0.0009160000000747459, 0.0008749999999508873, 0.0007919999999330685, 0.0005830000000059954
       ],
-      "B3": [
-        0.15699999999992542,
-        0.1719590000000153,
-        0.1386249999999336,
-        0.13508300000000872
-      ],
-      "B4": [
-        0.17295799999999417,
-        0.1477909999999838,
-        0.1437909999999647,
-        0.14541699999995217
-      ],
-      "B5": [
-        0.17799999999999727,
-        0.16879099999994196,
-        0.17520899999999529,
-        0.16300000000001091
-      ],
-      "B6": [
-        0.12391700000000583,
-        0.12154099999997925,
-        0.15275000000008276,
-        0.11791600000003655
-      ]
+      "B3": [0.15699999999992542, 0.1719590000000153, 0.1386249999999336, 0.13508300000000872],
+      "B4": [0.17295799999999417, 0.1477909999999838, 0.1437909999999647, 0.14541699999995217],
+      "B5": [0.17799999999999727, 0.16879099999994196, 0.17520899999999529, 0.16300000000001091],
+      "B6": [0.12391700000000583, 0.12154099999997925, 0.15275000000008276, 0.11791600000003655]
     },
     "boundary": "pure evaluator call",
     "warmupsPerSystem": 2,

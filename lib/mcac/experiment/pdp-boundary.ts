@@ -17,7 +17,12 @@ export function callLocalPdp<T extends PdpEvaluation>(args: {
   request: AuthorizationInput;
   prepareRequest?: (request: AuthorizationInput) => AuthorizationInput;
   shouldCollectContext?: boolean;
-  collectContext: (request: AuthorizationInput) => Readonly<{ context: ContextEvidence; consistencyEvidence: AuthorizationInput["consistencyEvidence"] }>;
+  collectContext: (
+    request: AuthorizationInput,
+  ) => Readonly<{
+    context: ContextEvidence;
+    consistencyEvidence: AuthorizationInput["consistencyEvidence"];
+  }>;
   evaluate: (request: AuthorizationInput) => T;
   appendTrace: (trace: McacTrace) => void;
   clock?: MonotonicClock;
@@ -25,7 +30,8 @@ export function callLocalPdp<T extends PdpEvaluation>(args: {
   let evaluation: T | undefined;
   const measurement = measurePdpBoundary(() => {
     let request = args.prepareRequest ? args.prepareRequest(args.request) : args.request;
-    if (request.baselinePermission && args.shouldCollectContext !== false) request = { ...request, ...args.collectContext(request) };
+    if (request.baselinePermission && args.shouldCollectContext !== false)
+      request = { ...request, ...args.collectContext(request) };
     evaluation = args.evaluate(request);
     if (evaluation.trace) args.appendTrace(evaluation.trace);
     return evaluation.decision;

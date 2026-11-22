@@ -13,7 +13,9 @@ export function assertPolicyVersionTransition(previous: PolicyVersion, next: Pol
   const { version: previousVersion, ...previousBody } = previous;
   const { version: nextVersion, ...nextBody } = next;
   if (canonicalJson(previousBody) !== canonicalJson(nextBody) && previousVersion === nextVersion) {
-    throw new Error(`Policy content changed without a new immutable version (version ${previousVersion})`);
+    throw new Error(
+      `Policy content changed without a new immutable version (version ${previousVersion})`,
+    );
   }
 }
 

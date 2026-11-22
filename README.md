@@ -26,10 +26,10 @@ bun run dev
 
 Open `http://localhost:3000`. Local development initialization provisions two active starter accounts if their emails do not already exist:
 
-| Role | Email | Development password |
-|---|---|---|
+| Role        | Email                  | Development password        |
+| ----------- | ---------------------- | --------------------------- |
 | Super Admin | `superadmin@mcaf.test` | `MCAF-SuperAdmin-Dev-2026!` |
-| Admin | `admin@mcaf.test` | `MCAF-Admin-Dev-2026!` |
+| Admin       | `admin@mcaf.test`      | `MCAF-Admin-Dev-2026!`      |
 
 These are development-only credentials. Change them before sharing a local instance. Account creation never overwrites an existing password or promotes an existing account. The initializer creates the schema idempotently and seeds role templates/resources/scenarios. Production initialization does not use these defaults. The development `POST /api/init` endpoint is disabled in production and can be protected with `INIT_TOKEN`.
 

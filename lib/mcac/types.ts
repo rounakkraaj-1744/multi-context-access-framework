@@ -10,45 +10,82 @@ export type ActionClass = "read" | "write" | "export" | "admin";
 export type EnvironmentalItemKind = "time" | "location" | "network" | "device";
 export type BehavioralItemKind = "session" | "frequency" | "history" | "navigation" | "request";
 export type ContextItemKind = EnvironmentalItemKind | BehavioralItemKind;
+export const CANONICAL_NETWORK_CLASSES = ["corporate", "vpn", "known", "unknown"] as const;
+export type NetworkClass = (typeof CANONICAL_NETWORK_CLASSES)[number];
 export type ContextValueMap = Readonly<{
   time: Readonly<{ weekday: number; hour: number; timezone: string }>;
   location: Readonly<{ country: string; region: string }>;
-  network: "corporate" | "vpn" | "known" | "unknown";
+  network: NetworkClass;
   device: Readonly<{ registered: boolean; deviceId: string | null; tokenAgeSeconds: number }>;
   session: Readonly<{ method: string; ageSeconds: number }>;
   frequency: Readonly<{ count: number; windowSeconds: number }>;
-  history: Readonly<{ classes: readonly Readonly<{ resourceClass: string; count: number }>[]; windowDays: number; enrollmentComplete: boolean }>;
-  navigation: Readonly<{ previousClass: string | null; currentClass: string; transitionCount: number; enrollmentComplete: boolean }>;
+  history: Readonly<{
+    classes: readonly Readonly<{ resourceClass: string; count: number }>[];
+    windowDays: number;
+    enrollmentComplete: boolean;
+  }>;
+  navigation: Readonly<{
+    previousClass: string | null;
+    currentClass: string;
+    transitionCount: number;
+    enrollmentComplete: boolean;
+  }>;
   request: Readonly<{ resourceClass: string; actionClass: ActionClass }>;
 }>;
 export type ContextItemValue<K extends ContextItemKind = ContextItemKind> = ContextValueMap[K];
-export type ThresholdValue = string | number | boolean | readonly (string | number | boolean)[] | Readonly<{ startHour: number; endHour: number; weekdays?: readonly number[] }>;
+export type ThresholdValue =
+  | string
+  | number
+  | boolean
+  | readonly (string | number | boolean)[]
+  | Readonly<{ startHour: number; endHour: number; weekdays?: readonly number[] }>;
 export type ItemValue = ContextItemValue | ThresholdValue;
 
 /** Eq. (2)'s tuple plus the derived status retained in an evaluation trace. */
-export type ContextItem<K extends ContextItemKind = ContextItemKind> = { [P in K]: Readonly<{
-  kind: P;
-  value: ContextItemValue<P> | null;
-  observedAt: number | null;
-  sourceClass: SourceClass | null;
-  integrityFlag: 0 | 1;
-  validityStatus: ValidityStatus;
-}> }[K];
+export type ContextItem<K extends ContextItemKind = ContextItemKind> = {
+  [P in K]: Readonly<{
+    kind: P;
+    value: ContextItemValue<P> | null;
+    observedAt: number | null;
+    sourceClass: SourceClass | null;
+    integrityFlag: 0 | 1;
+    validityStatus: ValidityStatus;
+  }>;
+}[K];
 
-export type ContextEvidenceItem<K extends ContextItemKind = ContextItemKind> = { [P in K]: Readonly<{
-  kind: P;
-  value: ContextItemValue<P> | null;
-  observedAt: number | null;
-  sourceClass: SourceClass | null;
-  integrityFlag: 0 | 1;
-}> }[K];
+export type ContextEvidenceItem<K extends ContextItemKind = ContextItemKind> = {
+  [P in K]: Readonly<{
+    kind: P;
+    value: ContextItemValue<P> | null;
+    observedAt: number | null;
+    sourceClass: SourceClass | null;
+    integrityFlag: 0 | 1;
+  }>;
+}[K];
 
-export type EnvironmentalContext = Readonly<{ [K in EnvironmentalItemKind]: ContextEvidenceItem<K> }>;
+export type EnvironmentalContext = Readonly<{
+  [K in EnvironmentalItemKind]: ContextEvidenceItem<K>;
+}>;
 export type BehavioralContext = Readonly<{ [K in BehavioralItemKind]: ContextEvidenceItem<K> }>;
-export type ContextEvidence = Readonly<{ environmental: EnvironmentalContext; behavioral: BehavioralContext }>;
+export type ContextEvidence = Readonly<{
+  environmental: EnvironmentalContext;
+  behavioral: BehavioralContext;
+}>;
 
-export type Comparator = "eq" | "neq" | "in" | "lt" | "lte" | "gt" | "gte" | "in_window" | "registered" | "not_novel" | "expected_transition";
-export type Threshold = ThresholdValue | Readonly<{ by: "network"; values: Readonly<Record<string, ThresholdValue>> }>;
+export type Comparator =
+  | "eq"
+  | "neq"
+  | "in"
+  | "lt"
+  | "lte"
+  | "gt"
+  | "gte"
+  | "in_window"
+  | "registered"
+  | "not_novel"
+  | "expected_transition";
+export type Threshold =
+  ThresholdValue | Readonly<{ by: "network"; values: Readonly<Record<string, ThresholdValue>> }>;
 export type Condition = Readonly<{
   id: string;
   item: ContextItemKind;
@@ -65,11 +102,18 @@ export type Rule = Readonly<{
   failOpen: 0 | 1;
 }>;
 
-export type DeclaredConsistencyConstraint = Readonly<{ id: string; items: readonly ContextItemKind[] }>;
+export type DeclaredConsistencyConstraint = Readonly<{
+  id: string;
+  items: readonly ContextItemKind[];
+}>;
 /** Constraint outcomes are explicit recorded inputs from the policy constraint evaluator. */
 export type ConsistencyEvidence = Readonly<{ id: string; violated: boolean }>;
 
-export type ResourceProfile = Readonly<{ sensitivity: Sensitivity; stepUpAvailable: boolean; waiverDurationSeconds: number }>;
+export type ResourceProfile = Readonly<{
+  sensitivity: Sensitivity;
+  stepUpAvailable: boolean;
+  waiverDurationSeconds: number;
+}>;
 
 export type PolicyVersion = Readonly<{
   version: string;
@@ -80,7 +124,10 @@ export type PolicyVersion = Readonly<{
   expectedTransitions: readonly Readonly<{ previousClass: string; currentClass: string }>[];
   rules: readonly Rule[];
   strictLowSensitivity: boolean;
-  interactions: Readonly<{ environmentConditionedThresholds: boolean; crossCategoryConsistency: boolean }>;
+  interactions: Readonly<{
+    environmentConditionedThresholds: boolean;
+    crossCategoryConsistency: boolean;
+  }>;
 }>;
 
 export type InteractionEvaluation = Readonly<{

@@ -7,15 +7,40 @@ import { hashTrace, verifyTraceHash } from "./trace";
 
 describe("immutable SQLite MCAC policy and trace persistence", () => {
   let folder = "";
-  let sqlite: typeof import("../db")["sqlite"];
+  let sqlite: (typeof import("../db"))["sqlite"];
   let store: typeof import("./sqlite-store");
-  let evaluate: typeof import("./decision")["evaluateMcac"];
+  let evaluate: (typeof import("./decision"))["evaluateMcac"];
   const basePolicy: PolicyVersion = {
     version: "mcac-1",
-    resourceProfiles: { payroll: { sensitivity: "H", stepUpAvailable: true, waiverDurationSeconds: 300 } },
-    freshnessSeconds: { time: 300, location: 300, network: 300, device: 300, session: 300, frequency: 300, history: 300, navigation: 300, request: 300 },
-    verificationRequired: { time: 0, location: 0, network: 0, device: 1, session: 0, frequency: 0, history: 0, navigation: 0, request: 0 },
-    consistencyConstraints: [], expectedTransitions: [], rules: [], strictLowSensitivity: false,
+    resourceProfiles: {
+      payroll: { sensitivity: "H", stepUpAvailable: true, waiverDurationSeconds: 300 },
+    },
+    freshnessSeconds: {
+      time: 300,
+      location: 300,
+      network: 300,
+      device: 300,
+      session: 300,
+      frequency: 300,
+      history: 300,
+      navigation: 300,
+      request: 300,
+    },
+    verificationRequired: {
+      time: 0,
+      location: 0,
+      network: 0,
+      device: 1,
+      session: 0,
+      frequency: 0,
+      history: 0,
+      navigation: 0,
+      request: 0,
+    },
+    consistencyConstraints: [],
+    expectedTransitions: [],
+    rules: [],
+    strictLowSensitivity: false,
     interactions: { environmentConditionedThresholds: true, crossCategoryConsistency: true },
   };
   beforeAll(async () => {
@@ -33,42 +58,100 @@ describe("immutable SQLite MCAC policy and trace persistence", () => {
   });
 
   it("stores detached immutable versions, requires a new version on change, and loads historical snapshots", () => {
-    const nestedPolicy: PolicyVersion = { ...basePolicy, version: "mcac-nested", rules: [{ id: "nested", resourceClass: "payroll", actions: ["export"], environmental: [], behavioral: [], failOpen: 0 }] };
+    const nestedPolicy: PolicyVersion = {
+      ...basePolicy,
+      version: "mcac-nested",
+      rules: [
+        {
+          id: "nested",
+          resourceClass: "payroll",
+          actions: ["export"],
+          environmental: [],
+          behavioral: [],
+          failOpen: 0,
+        },
+      ],
+    };
     store.storePolicyVersion(nestedPolicy, "2026-01-01T00:00:00.000Z");
     (nestedPolicy.rules[0]!.actions as string[]).push("read");
     store.storePolicyVersion(basePolicy, "2026-01-01T00:00:00.000Z");
     store.storePolicyVersion(basePolicy, "2026-01-01T00:00:00.000Z");
     expect(store.loadPolicyVersion("mcac-nested").rules[0]?.actions).toEqual(["export"]);
-    expect(() => store.storePolicyVersion({ ...basePolicy, strictLowSensitivity: true }, "2026-01-02T00:00:00.000Z", "mcac-1")).toThrow(/already exists with different content/);
+    expect(() =>
+      store.storePolicyVersion(
+        { ...basePolicy, strictLowSensitivity: true },
+        "2026-01-02T00:00:00.000Z",
+        "mcac-1",
+      ),
+    ).toThrow(/already exists with different content/);
     const next = { ...basePolicy, version: "mcac-2", strictLowSensitivity: true };
     store.storePolicyVersion(next, "2026-01-02T00:00:00.000Z", "mcac-1");
     expect(store.loadPolicyVersion("mcac-1").strictLowSensitivity).toBe(false);
     expect(store.loadPolicyVersion("mcac-2").strictLowSensitivity).toBe(true);
-    expect(() => sqlite.prepare("UPDATE mcac_policy_versions SET snapshot='{}' WHERE version='mcac-1'").run()).toThrow(/immutable/);
-    expect(() => sqlite.prepare("DELETE FROM mcac_policy_versions WHERE version='mcac-1'").run()).toThrow(/immutable/);
+    expect(() =>
+      sqlite.prepare("UPDATE mcac_policy_versions SET snapshot='{}' WHERE version='mcac-1'").run(),
+    ).toThrow(/immutable/);
+    expect(() =>
+      sqlite.prepare("DELETE FROM mcac_policy_versions WHERE version='mcac-1'").run(),
+    ).toThrow(/immutable/);
   });
 
   it("persists replayable hash-chained traces and rejects broken links", () => {
     const emptyContext = { environmental: {}, behavioral: {} } as never;
     const first = evaluate({
-      request: { requestId: "trace-1", time: Date.UTC(2026, 0, 1), userId: "u", sessionId: "s", resourceId: "r", resourceClass: "payroll", action: "export" },
-      baselinePermission: false, policy: basePolicy, context: emptyContext, consistencyEvidence: [], waiver: null, previousHash: "GENESIS",
+      request: {
+        requestId: "trace-1",
+        time: Date.UTC(2026, 0, 1),
+        userId: "u",
+        sessionId: "s",
+        resourceId: "r",
+        resourceClass: "payroll",
+        action: "export",
+      },
+      baselinePermission: false,
+      policy: basePolicy,
+      context: emptyContext,
+      consistencyEvidence: [],
+      waiver: null,
+      previousHash: "GENESIS",
     }).trace;
     store.storeDecisionTrace(first, "2026-01-01T00:00:00.000Z");
     expect(store.loadDecisionTrace("trace-1")).toEqual(first);
     const second = evaluate({
-      request: { requestId: "trace-2", time: Date.UTC(2026, 0, 1), userId: "u", sessionId: "s", resourceId: "r", resourceClass: "payroll", action: "export" },
-      baselinePermission: false, policy: basePolicy, context: emptyContext, consistencyEvidence: [], waiver: null, previousHash: first.hash,
+      request: {
+        requestId: "trace-2",
+        time: Date.UTC(2026, 0, 1),
+        userId: "u",
+        sessionId: "s",
+        resourceId: "r",
+        resourceClass: "payroll",
+        action: "export",
+      },
+      baselinePermission: false,
+      policy: basePolicy,
+      context: emptyContext,
+      consistencyEvidence: [],
+      waiver: null,
+      previousHash: first.hash,
     }).trace;
     expect(() => store.storeDecisionTrace(second, "2026-01-01T00:00:01.000Z")).not.toThrow();
     expect(verifyTraceHash({ ...first, decision: "ALLOW" })).toBe(false);
     const reorderedBody: Record<string, unknown> = { ...second, previousHash: "GENESIS" };
     delete reorderedBody["hash"];
-    const reordered = { ...reorderedBody, hash: hashTrace(reorderedBody as Omit<typeof second, "hash">) } as typeof second;
-    expect(() => store.storeDecisionTrace(reordered, "2026-01-01T00:00:02.000Z")).toThrow(/chain discontinuity/);
+    const reordered = {
+      ...reorderedBody,
+      hash: hashTrace(reorderedBody as Omit<typeof second, "hash">),
+    } as typeof second;
+    expect(() => store.storeDecisionTrace(reordered, "2026-01-01T00:00:02.000Z")).toThrow(
+      /chain discontinuity/,
+    );
     const broken = { ...second, requestId: "trace-3" };
     expect(() => store.storeDecisionTrace(broken, "2026-01-01T00:00:02.000Z")).toThrow(/hash/);
-    expect(() => sqlite.prepare("DELETE FROM mcac_decision_traces WHERE request_id='trace-1'").run()).toThrow(/immutable/);
-    expect(() => sqlite.prepare("DELETE FROM mcac_decision_traces WHERE request_id='trace-2'").run()).toThrow(/immutable/);
+    expect(() =>
+      sqlite.prepare("DELETE FROM mcac_decision_traces WHERE request_id='trace-1'").run(),
+    ).toThrow(/immutable/);
+    expect(() =>
+      sqlite.prepare("DELETE FROM mcac_decision_traces WHERE request_id='trace-2'").run(),
+    ).toThrow(/immutable/);
   });
 });

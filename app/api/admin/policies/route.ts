@@ -1,12 +1,143 @@
 import { actorOrError, isSuperAdmin, json } from "@/lib/api";
 import { audit, id, now, sqlite } from "@/lib/db";
 import { z } from "zod";
-const timeValue=z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
-const allowedTimeWindow=z.object({start:timeValue,end:timeValue,timezone:z.string().min(1).max(100).refine((value)=>{try{new Intl.DateTimeFormat("en-US",{timeZone:value});return true;}catch{return false;}},{message:"Use a valid IANA timezone."})}).strict().refine((value)=>value.start!==value.end,{message:"Start and end times must differ."});
-const conditions = z.object({ businessHoursOnly:z.boolean().optional(),registeredDeviceOnly:z.boolean().optional(),knownNetworkOnly:z.boolean().optional(),maxRequests:z.number().int().min(1).max(10000).optional(),denyUnusualSequence:z.boolean().optional(),maxContextAgeSeconds:z.number().int().min(1).max(86400).optional(),allowedTimeWindow:allowedTimeWindow.optional() }).strict();
-const schema=z.object({name:z.string().trim().min(3).max(100),resource:z.string().min(1).max(100),action:z.enum(["read","update","*"]),effect:z.enum(["ALLOW","DENY","STEP_UP_AUTH"]),conditions,enabled:z.boolean().default(true)});
-function guard(){return actorOrError().then(r=>"response"in r?r:!isSuperAdmin(r.actor)?{response:Response.json({error:{code:"FORBIDDEN",message:"Super Admin access required."}},{status:403})}:r)}
-export async function GET(){const r=await guard();if("response"in r)return r.response;return json({policies:sqlite.prepare("SELECT * FROM policies ORDER BY name").all()});}
-export async function POST(req:Request){const r=await guard();if("response"in r)return r.response;const p=schema.safeParse(await req.json().catch(()=>null));if(!p.success)return Response.json({error:{code:"VALIDATION_ERROR",message:"Invalid policy definition."}},{status:400});const policyId=id();sqlite.prepare("INSERT INTO policies(id,name,resource,action,effect,conditions,enabled,updated_at) VALUES(?,?,?,?,?,?,?,?)").run(policyId,p.data.name,p.data.resource,p.data.action,p.data.effect,JSON.stringify(p.data.conditions),p.data.enabled?1:0,now());audit(r.actor.id,"POLICY_CREATED",policyId,p.data);return json({id:policyId},201);}
-export async function PATCH(req:Request){const r=await guard();if("response"in r)return r.response;const p=schema.extend({id:z.string().min(1)}).safeParse(await req.json().catch(()=>null));if(!p.success)return Response.json({error:{code:"VALIDATION_ERROR",message:"Invalid policy definition."}},{status:400});const exists=sqlite.prepare("SELECT 1 FROM policies WHERE id=?").get(p.data.id);if(!exists)return Response.json({error:{code:"NOT_FOUND",message:"Policy not found."}},{status:404});sqlite.prepare("UPDATE policies SET name=?,resource=?,action=?,effect=?,conditions=?,enabled=?,updated_at=? WHERE id=?").run(p.data.name,p.data.resource,p.data.action,p.data.effect,JSON.stringify(p.data.conditions),p.data.enabled?1:0,now(),p.data.id);audit(r.actor.id,"POLICY_UPDATED",p.data.id,p.data);return json({updated:true});}
-export async function DELETE(req:Request){const r=await guard();if("response"in r)return r.response;const p=z.object({id:z.string().min(1)}).safeParse(await req.json().catch(()=>null));if(!p.success)return Response.json({error:{code:"VALIDATION_ERROR",message:"Invalid policy."}},{status:400});const item=sqlite.prepare("SELECT name FROM policies WHERE id=?").get(p.data.id) as {name:string}|undefined;if(!item)return Response.json({error:{code:"NOT_FOUND",message:"Policy not found."}},{status:404});sqlite.prepare("DELETE FROM policies WHERE id=?").run(p.data.id);audit(r.actor.id,"POLICY_DELETED",p.data.id,{name:item.name});return json({deleted:true});}
+const timeValue = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const allowedTimeWindow = z
+  .object({
+    start: timeValue,
+    end: timeValue,
+    timezone: z
+      .string()
+      .min(1)
+      .max(100)
+      .refine(
+        (value) => {
+          try {
+            new Intl.DateTimeFormat("en-US", { timeZone: value });
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        { message: "Use a valid IANA timezone." },
+      ),
+  })
+  .strict()
+  .refine((value) => value.start !== value.end, { message: "Start and end times must differ." });
+const conditions = z
+  .object({
+    businessHoursOnly: z.boolean().optional(),
+    registeredDeviceOnly: z.boolean().optional(),
+    knownNetworkOnly: z.boolean().optional(),
+    maxRequests: z.number().int().min(1).max(10000).optional(),
+    denyUnusualSequence: z.boolean().optional(),
+    maxContextAgeSeconds: z.number().int().min(1).max(86400).optional(),
+    allowedTimeWindow: allowedTimeWindow.optional(),
+  })
+  .strict();
+const schema = z.object({
+  name: z.string().trim().min(3).max(100),
+  resource: z.string().min(1).max(100),
+  action: z.enum(["read", "update", "*"]),
+  effect: z.enum(["ALLOW", "DENY", "STEP_UP_AUTH"]),
+  conditions,
+  enabled: z.boolean().default(true),
+});
+function guard() {
+  return actorOrError().then((r) =>
+    "response" in r
+      ? r
+      : !isSuperAdmin(r.actor)
+        ? {
+            response: Response.json(
+              { error: { code: "FORBIDDEN", message: "Super Admin access required." } },
+              { status: 403 },
+            ),
+          }
+        : r,
+  );
+}
+export async function GET() {
+  const r = await guard();
+  if ("response" in r) return r.response;
+  return json({ policies: sqlite.prepare("SELECT * FROM policies ORDER BY name").all() });
+}
+export async function POST(req: Request) {
+  const r = await guard();
+  if ("response" in r) return r.response;
+  const p = schema.safeParse(await req.json().catch(() => null));
+  if (!p.success)
+    return Response.json(
+      { error: { code: "VALIDATION_ERROR", message: "Invalid policy definition." } },
+      { status: 400 },
+    );
+  const policyId = id();
+  sqlite
+    .prepare(
+      "INSERT INTO policies(id,name,resource,action,effect,conditions,enabled,updated_at) VALUES(?,?,?,?,?,?,?,?)",
+    )
+    .run(
+      policyId,
+      p.data.name,
+      p.data.resource,
+      p.data.action,
+      p.data.effect,
+      JSON.stringify(p.data.conditions),
+      p.data.enabled ? 1 : 0,
+      now(),
+    );
+  audit(r.actor.id, "POLICY_CREATED", policyId, p.data);
+  return json({ id: policyId }, 201);
+}
+export async function PATCH(req: Request) {
+  const r = await guard();
+  if ("response" in r) return r.response;
+  const p = schema.extend({ id: z.string().min(1) }).safeParse(await req.json().catch(() => null));
+  if (!p.success)
+    return Response.json(
+      { error: { code: "VALIDATION_ERROR", message: "Invalid policy definition." } },
+      { status: 400 },
+    );
+  const exists = sqlite.prepare("SELECT 1 FROM policies WHERE id=?").get(p.data.id);
+  if (!exists)
+    return Response.json(
+      { error: { code: "NOT_FOUND", message: "Policy not found." } },
+      { status: 404 },
+    );
+  sqlite
+    .prepare(
+      "UPDATE policies SET name=?,resource=?,action=?,effect=?,conditions=?,enabled=?,updated_at=? WHERE id=?",
+    )
+    .run(
+      p.data.name,
+      p.data.resource,
+      p.data.action,
+      p.data.effect,
+      JSON.stringify(p.data.conditions),
+      p.data.enabled ? 1 : 0,
+      now(),
+      p.data.id,
+    );
+  audit(r.actor.id, "POLICY_UPDATED", p.data.id, p.data);
+  return json({ updated: true });
+}
+export async function DELETE(req: Request) {
+  const r = await guard();
+  if ("response" in r) return r.response;
+  const p = z.object({ id: z.string().min(1) }).safeParse(await req.json().catch(() => null));
+  if (!p.success)
+    return Response.json(
+      { error: { code: "VALIDATION_ERROR", message: "Invalid policy." } },
+      { status: 400 },
+    );
+  const item = sqlite.prepare("SELECT name FROM policies WHERE id=?").get(p.data.id) as
+    { name: string } | undefined;
+  if (!item)
+    return Response.json(
+      { error: { code: "NOT_FOUND", message: "Policy not found." } },
+      { status: 404 },
+    );
+  sqlite.prepare("DELETE FROM policies WHERE id=?").run(p.data.id);
+  audit(r.actor.id, "POLICY_DELETED", p.data.id, { name: item.name });
+  return json({ deleted: true });
+}

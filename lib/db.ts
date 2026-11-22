@@ -39,6 +39,14 @@ CREATE TRIGGER IF NOT EXISTS mcac_policy_versions_no_delete BEFORE DELETE ON mca
 CREATE TABLE IF NOT EXISTS mcac_decision_traces (trace_hash TEXT PRIMARY KEY, request_id TEXT NOT NULL UNIQUE, policy_version TEXT NOT NULL REFERENCES mcac_policy_versions(version), trace_json TEXT NOT NULL, created_at TEXT NOT NULL);
 CREATE TRIGGER IF NOT EXISTS mcac_decision_traces_no_update BEFORE UPDATE ON mcac_decision_traces BEGIN SELECT RAISE(ABORT,'MCAC decision traces are immutable'); END;
 CREATE TRIGGER IF NOT EXISTS mcac_decision_traces_no_delete BEFORE DELETE ON mcac_decision_traces BEGIN SELECT RAISE(ABORT,'MCAC decision traces are immutable'); END;
+CREATE TABLE IF NOT EXISTS mcac_policy_drafts (
+ id TEXT PRIMARY KEY, name TEXT NOT NULL, resource_class TEXT NOT NULL,
+ action TEXT NOT NULL CHECK(action IN ('read','write','export','admin')),
+ policy_json TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT','VALIDATED','PUBLISHED','ACTIVE','RETIRED')),
+ validation_report TEXT NOT NULL DEFAULT '[]', created_by TEXT NOT NULL REFERENCES users(id),
+ updated_by TEXT NOT NULL REFERENCES users(id), created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS mcac_policy_drafts_scope ON mcac_policy_drafts(resource_class,action,status,updated_at DESC);
 CREATE TABLE IF NOT EXISTS audit_events (id TEXT PRIMARY KEY, actor_id TEXT REFERENCES users(id), event_type TEXT NOT NULL, target_id TEXT, details TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS audit_created ON audit_events(created_at DESC);
 CREATE TABLE IF NOT EXISTS notifications (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), event_type TEXT NOT NULL, title TEXT NOT NULL, summary TEXT NOT NULL, related_id TEXT, created_at TEXT NOT NULL, read_at TEXT, UNIQUE(user_id,event_type,related_id));
@@ -57,19 +65,43 @@ const userColumns = sqlite.prepare("PRAGMA table_info(users)").all() as { name: 
 if (!userColumns.some((column) => column.name === "organization_id")) {
   sqlite.exec("ALTER TABLE users ADD COLUMN organization_id TEXT NOT NULL DEFAULT 'default'");
 }
-const accessColumns = sqlite.prepare("PRAGMA table_info(access_requests)").all() as { name: string }[];
-if (!accessColumns.some((column) => column.name === "session_id")) sqlite.exec("ALTER TABLE access_requests ADD COLUMN session_id TEXT REFERENCES sessions(id)");
+const accessColumns = sqlite.prepare("PRAGMA table_info(access_requests)").all() as {
+  name: string;
+}[];
+if (!accessColumns.some((column) => column.name === "session_id"))
+  sqlite.exec("ALTER TABLE access_requests ADD COLUMN session_id TEXT REFERENCES sessions(id)");
 export const db = drizzle(sqlite);
 export const now = () => new Date().toISOString();
 export const id = () => crypto.randomUUID();
-export function audit(actor: string | null, event: string, target: string | null, details: unknown = {}) {
-  sqlite.prepare("INSERT INTO audit_events(id,actor_id,event_type,target_id,details,created_at) VALUES(?,?,?,?,?,?)")
+export function audit(
+  actor: string | null,
+  event: string,
+  target: string | null,
+  details: unknown = {},
+) {
+  sqlite
+    .prepare(
+      "INSERT INTO audit_events(id,actor_id,event_type,target_id,details,created_at) VALUES(?,?,?,?,?,?)",
+    )
     .run(id(), actor, event, target, JSON.stringify(details), now());
 }
-export function notify(userId: string, type: string, title: string, summary: string, relatedId: string | null) {
-  sqlite.prepare("INSERT OR IGNORE INTO notifications(id,user_id,event_type,title,summary,related_id,created_at) VALUES(?,?,?,?,?,?,?)")
+export function notify(
+  userId: string,
+  type: string,
+  title: string,
+  summary: string,
+  relatedId: string | null,
+) {
+  sqlite
+    .prepare(
+      "INSERT OR IGNORE INTO notifications(id,user_id,event_type,title,summary,related_id,created_at) VALUES(?,?,?,?,?,?,?)",
+    )
     .run(id(), userId, type, title, summary, relatedId, now());
 }
 export function expireActiveSessions(at = now()) {
-  return sqlite.prepare("UPDATE sessions SET status='EXPIRED',logout_at=expires_at,reason='INACTIVITY_TIMEOUT' WHERE status='ACTIVE' AND expires_at<=?").run(at).changes;
+  return sqlite
+    .prepare(
+      "UPDATE sessions SET status='EXPIRED',logout_at=expires_at,reason='INACTIVITY_TIMEOUT' WHERE status='ACTIVE' AND expires_at<=?",
+    )
+    .run(at).changes;
 }

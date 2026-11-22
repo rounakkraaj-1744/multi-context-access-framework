@@ -3,8 +3,6 @@ import { createHash } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { evaluateAccess, evaluateRbac, type AccessContext, type Policy } from "../lib/authorization.ts";
 
-// Reproducible characterization of the implementation that exists in this checkout.
-// It does not substitute for the paper's missing formal MCAC evaluator or its baselines.
 const out = "research-evaluation/raw-results";
 mkdirSync(out, { recursive: true });
 const seed = 20261031;

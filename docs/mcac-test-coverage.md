@@ -4,13 +4,13 @@
 
 The project’s configured test runner is Vitest (`npm test` runs `vitest run`). `npm test -- --reporter=dot` passes the pre-existing suite and MCAC additions. The earlier `bun test` failure is runner-specific: Bun’s built-in compatibility runner does not provide `vi.hoisted`, used by the existing integration suite. The configured Vitest command runs that suite normally; it was not skipped or hidden.
 
-| Check | Result |
-|---|---|
-| Existing baseline before implementation (`npm test -- --reporter=dot`) | 2 files, 31 tests passed |
-| Current complete suite (`npm test -- --reporter=dot`) | 4 files, 70 tests passed |
-| Domain MCAC unit/property-style suite | `lib/mcac/mcac.test.ts` |
-| Policy/trace SQLite persistence | `lib/mcac/sqlite-store.test.ts`, temporary database |
-| Property testing package | None added; deterministic finite loops/table cases are used |
+| Check                                                                  | Result                                                      |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Existing baseline before implementation (`npm test -- --reporter=dot`) | 2 files, 31 tests passed                                    |
+| Current complete suite (`npm test -- --reporter=dot`)                  | 4 files, 70 tests passed                                    |
+| Domain MCAC unit/property-style suite                                  | `lib/mcac/mcac.test.ts`                                     |
+| Policy/trace SQLite persistence                                        | `lib/mcac/sqlite-store.test.ts`, temporary database         |
+| Property testing package                                               | None added; deterministic finite loops/table cases are used |
 
 These results are executable checks, not mathematical proofs of Propositions 1–3.
 
@@ -18,31 +18,31 @@ These results are executable checks, not mathematical proofs of Propositions 1�
 
 Statuses use the requested classifications: **1 implemented and tested**, **2 implemented but incompletely tested**, **3 partially implemented**, **4 not implemented**, **5 blocked by author clarification**.
 
-| Element | Coverage | Classification |
-|---|---|---|
-| Eq. (1) baseline non-bypass | No-permission, malformed context/policy and varied policy/context cases all DENY before evidence processing | 1 |
-| Context items `Ce`/`Cb` and metadata | Typed signal schema and all nine item kinds; runtime checks for absent tuple, source, integrity and value shape | 1 |
-| Eq. (2) V/S/M/U/X | One case per state, exact precedence, freshness age beyond/equal boundary, cold enrollment M | 1 |
-| Eq. (5) T/F/I | T and F valid conditions; I for each M/S/U/X and degraded network threshold | 1 |
-| Eq. (7) strength/sensitivity/fail-open/strict | soft/hard, low/high, T/F/I behavior, fail-open and strict mode | 1 |
-| Eqs. (8)–(10) aggregation | empty maxima, environment-only, behavior-only, combined maxima and conflicting condition order | 1 |
-| Eq. (11) all decisions | ALLOW/VERIFY/DENY, ψ available/unavailable, severity 0/1/2 | 1 |
-| Eq. (12) waiver | valid waiver, class/action/session scope, assurance result, duration cap, expiry, severity-one reduction, severity-two non-waiver | 2 — expiry endpoint is an implementation convention pending clarification |
-| Environment-conditioned thresholds | valid lookup, degraded network, disabled mechanism, missing table key error | 3 — valid-key fallback undefined in manuscript (clarification 5) |
-| Cross-category consistency | satisfied/violated, status degradation to X, uninvolved item, independent disable toggle | 2 — tests inject explicit Γ outcomes; the paper does not define a constraint predicate language or resolve its example’s categories |
-| Proposition 1 | Repeated baseline-deny cases, including malformed policy/context | 1 |
-| Proposition 2 | Identical explicit inputs produce equal trace; rule reordering produces equal decision and condition trace | 1 |
-| Proposition 3 | High-sensitivity V→S/M/U/X cases with waiver fixed absent and fixed valid; decision ordering checked | 2 — sampled cases only, no exhaustive enumeration/property library; no claim for L |
-| Policy immutability/version transition | Snapshot deep-freeze, same-version content mutation rejection, new-version update and historical load | 1 |
-| Appendix A trace/hash | Deterministic hash, hash tampering detection, immutable database persistence, chain continuity | 1 |
-| Replay | Original version replay reproduces decision and maxima; different version and tampering rejected | 3 — uses the same evaluator, not the independent Fref required for Eq. (19) |
-| Replay-fidelity metric RF | Independent evaluator exists and selected differential tests run; no stored-corpus RF metric | 3 |
-| Full comparator/operator grammar | All cited manuscript examples represented and tested; Eq. (5) leaves `⊕` abstract and examples are not an exhaustive grammar | 5 |
-| Missing valid network threshold table entry | Rejected with explicit configuration error; no fallback decision invented | 5 |
-| Γ “cross-category” scope | Any declared item set is accepted to preserve the device/network example, both in Ce | 5 |
-| `Δv` exact expiry instant | Half-open interval follows existing application check; paper gives duration but not endpoint inclusion | 5 |
-| Hard-condition source lint | Approximate coarse location is statically excluded from hard conditions; runtime provenance retained | 3 — policy/provider source contract for every hard item still needs an application provider registry |
-| Integration with production routes | Safe adapter exists but no production route calls it; legacy context is incomplete for the formal model | 3 — intentionally not activated |
+| Element                                       | Coverage                                                                                                                          | Classification                                                                                                                      |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Eq. (1) baseline non-bypass                   | No-permission, malformed context/policy and varied policy/context cases all DENY before evidence processing                       | 1                                                                                                                                   |
+| Context items `Ce`/`Cb` and metadata          | Typed signal schema and all nine item kinds; runtime checks for absent tuple, source, integrity and value shape                   | 1                                                                                                                                   |
+| Eq. (2) V/S/M/U/X                             | One case per state, exact precedence, freshness age beyond/equal boundary, cold enrollment M                                      | 1                                                                                                                                   |
+| Eq. (5) T/F/I                                 | T and F valid conditions; I for each M/S/U/X and degraded network threshold                                                       | 1                                                                                                                                   |
+| Eq. (7) strength/sensitivity/fail-open/strict | soft/hard, low/high, T/F/I behavior, fail-open and strict mode                                                                    | 1                                                                                                                                   |
+| Eqs. (8)–(10) aggregation                     | empty maxima, environment-only, behavior-only, combined maxima and conflicting condition order                                    | 1                                                                                                                                   |
+| Eq. (11) all decisions                        | ALLOW/VERIFY/DENY, ψ available/unavailable, severity 0/1/2                                                                        | 1                                                                                                                                   |
+| Eq. (12) waiver                               | valid waiver, class/action/session scope, assurance result, duration cap, expiry, severity-one reduction, severity-two non-waiver | 2 — expiry endpoint is an implementation convention pending clarification                                                           |
+| Environment-conditioned thresholds            | valid lookup, degraded network, disabled mechanism, missing table key error                                                       | 3 — valid-key fallback undefined in manuscript (clarification 5)                                                                    |
+| Cross-category consistency                    | satisfied/violated, status degradation to X, uninvolved item, independent disable toggle                                          | 2 — tests inject explicit Γ outcomes; the paper does not define a constraint predicate language or resolve its example’s categories |
+| Proposition 1                                 | Repeated baseline-deny cases, including malformed policy/context                                                                  | 1                                                                                                                                   |
+| Proposition 2                                 | Identical explicit inputs produce equal trace; rule reordering produces equal decision and condition trace                        | 1                                                                                                                                   |
+| Proposition 3                                 | High-sensitivity V→S/M/U/X cases with waiver fixed absent and fixed valid; decision ordering checked                              | 2 — sampled cases only, no exhaustive enumeration/property library; no claim for L                                                  |
+| Policy immutability/version transition        | Snapshot deep-freeze, same-version content mutation rejection, new-version update and historical load                             | 1                                                                                                                                   |
+| Appendix A trace/hash                         | Deterministic hash, hash tampering detection, immutable database persistence, chain continuity                                    | 1                                                                                                                                   |
+| Replay                                        | Original version replay reproduces decision and maxima; different version and tampering rejected                                  | 3 — uses the same evaluator, not the independent Fref required for Eq. (19)                                                         |
+| Replay-fidelity metric RF                     | Independent evaluator exists and selected differential tests run; no stored-corpus RF metric                                      | 3                                                                                                                                   |
+| Full comparator/operator grammar              | All cited manuscript examples represented and tested; Eq. (5) leaves `⊕` abstract and examples are not an exhaustive grammar      | 5                                                                                                                                   |
+| Missing valid network threshold table entry   | Rejected with explicit configuration error; no fallback decision invented                                                         | 5                                                                                                                                   |
+| Γ “cross-category” scope                      | Any declared item set is accepted to preserve the device/network example, both in Ce                                              | 5                                                                                                                                   |
+| `Δv` exact expiry instant                     | Half-open interval follows existing application check; paper gives duration but not endpoint inclusion                            | 5                                                                                                                                   |
+| Hard-condition source lint                    | Approximate coarse location is statically excluded from hard conditions; runtime provenance retained                              | 3 — policy/provider source contract for every hard item still needs an application provider registry                                |
+| Integration with production routes            | Safe adapter exists but no production route calls it; legacy context is incomplete for the formal model                           | 3 — intentionally not activated                                                                                                     |
 
 ## Required additional work
 

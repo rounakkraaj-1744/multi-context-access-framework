@@ -2,11 +2,337 @@ import { actorOrError, isAdmin, json, isSuperAdmin } from "@/lib/api";
 import { sqlite, now, audit, notify } from "@/lib/db";
 import { z } from "zod";
 
-export async function GET(req:Request){const r=await actorOrError();if("response"in r)return r.response;if(!isAdmin(r.actor))return Response.json({error:{code:"FORBIDDEN",message:"Admin access required."}},{status:403});
- const url=new URL(req.url);const q=url.searchParams.get("q")??"";const status=url.searchParams.get("status");const page=Math.max(1,Number(url.searchParams.get("page")??1)||1);const limit=25;const scope=isSuperAdmin(r.actor)?"%":r.actor.organizationId;const rows=sqlite.prepare(`SELECT u.id,u.name,u.email,u.department,u.job_title,u.status,u.requested_role,u.created_at,group_concat(DISTINCT r.name) roles FROM users u LEFT JOIN user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id WHERE u.organization_id LIKE ? AND (u.name LIKE ? OR u.email LIKE ?) AND (? IS NULL OR u.status=?) GROUP BY u.id ORDER BY u.created_at DESC LIMIT ? OFFSET ?`).all(scope,`%${q}%`,`%${q}%`,status,status,limit,(page-1)*limit);return json({users:rows,page,limit,total:Number((sqlite.prepare("SELECT COUNT(*) n FROM users WHERE organization_id LIKE ? AND (name LIKE ? OR email LIKE ?) AND (? IS NULL OR status=?)").get(scope,`%${q}%`,`%${q}%`,status,status) as {n:number}).n)});}
-const mutation=z.object({action:z.enum(["approve","reject","suspend","deactivate","reactivate","assign-role","revoke-role","grant-permission","revoke-permission"]),reason:z.string().max(500).optional(),role:z.string().optional(),permissionCode:z.string().optional()});
-export async function PATCH(req:Request){const r=await actorOrError();if("response"in r)return r.response;if(!isAdmin(r.actor))return Response.json({error:{code:"FORBIDDEN",message:"Admin access required."}},{status:403});const body=await req.json().catch(()=>null);const parsed=z.object({userId:z.string().uuid(),...mutation.shape}).safeParse(body);if(!parsed.success)return Response.json({error:{code:"VALIDATION_ERROR",message:"Invalid update."}},{status:400});const {userId,action,reason,role,permissionCode}=parsed.data;const user=sqlite.prepare("SELECT id,status,organization_id,requested_role FROM users WHERE id=? AND (?=1 OR organization_id=?)").get(userId,isSuperAdmin(r.actor)?1:0,r.actor.organizationId) as {id:string;status:string;organization_id:string;requested_role:string|null}|undefined;if(!user)return Response.json({error:{code:"NOT_FOUND",message:"User not found."}},{status:404});
- if(action==="approve"||action==="reject"){if(!r.actor.permissions.includes("registrations:review")&&!isSuperAdmin(r.actor))return Response.json({error:{code:"FORBIDDEN",message:"Registration review permission required."}},{status:403});if(user.status!=="PENDING")return Response.json({error:{code:"CONFLICT",message:"Registration is no longer pending."}},{status:409});if(action==="reject"&&!reason?.trim())return Response.json({error:{code:"REASON_REQUIRED",message:"Provide a rejection reason."}},{status:400});const tx=sqlite.transaction(()=>{const assignedRole=role??user.requested_role??"Backend Engineer";if(action==="approve"){const allowed=isSuperAdmin(r.actor)?["HR","Backend Engineer","DevOps Engineer","Manager","Admin","Super Admin"].includes(assignedRole):["HR","Backend Engineer","DevOps Engineer","Manager"].includes(assignedRole);if(!allowed)throw new Error("SCOPE");if(!sqlite.prepare("SELECT id FROM roles WHERE name=?").get(assignedRole))throw new Error("UNKNOWN_ROLE");}sqlite.prepare("UPDATE users SET status=?,approved_by=?,approved_at=?,rejection_reason=?,updated_at=? WHERE id=?").run(action==="approve"?"ACTIVE":"REJECTED",action==="approve"?r.actor.id:null,action==="approve"?now():null,action==="reject"?reason:null,now(),userId);if(action==="approve")sqlite.prepare("INSERT OR IGNORE INTO user_roles(user_id,role_id,assigned_by,assigned_at) VALUES(?,?,?,?)").run(userId,assignedRole,r.actor.id,now());audit(r.actor.id,`REGISTRATION_${action.toUpperCase()}`,userId,{reason:reason??null,role:action==="approve"?assignedRole:null});notify(userId,`registration.${action}`,action==="approve"?"Registration approved":"Registration update",action==="approve"?"Your account is now active.":`Your registration was declined. ${reason??""}`,userId);});try{tx();}catch(e){const code=e instanceof Error&&e.message==="SCOPE"?"This role is outside your scope.":e instanceof Error&&e.message==="UNKNOWN_ROLE"?"Unknown role.":"Could not update registration.";return Response.json({error:{code:"FORBIDDEN",message:code}},{status:403});}}
- else if(action==="assign-role"||action==="revoke-role"||action==="grant-permission"||action==="revoke-permission"){if(!isSuperAdmin(r.actor)&&!r.actor.permissions.includes("permissions:manage"))return Response.json({error:{code:"FORBIDDEN",message:"Permission management capability required."}},{status:403});if(userId===r.actor.id)return Response.json({error:{code:"SELF_ESCALATION",message:"You cannot change your own roles or permissions."}},{status:409});try{sqlite.transaction(()=>{if(action.endsWith("role")){if(!role)throw new Error("INPUT");const targetRole=sqlite.prepare("SELECT id,name FROM roles WHERE name=?").get(role) as {id:string;name:string}|undefined;if(!targetRole)throw new Error("UNKNOWN");if(!isSuperAdmin(r.actor)){const granted=sqlite.prepare("SELECT p.code FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=?").all(targetRole.id) as {code:string}[];if(["Admin","Super Admin"].includes(role)||granted.some(permission=>!r.actor.permissions.includes(permission.code)))throw new Error("SCOPE");}if(action==="assign-role")sqlite.prepare("INSERT OR IGNORE INTO user_roles(user_id,role_id,assigned_by,assigned_at) VALUES(?,?,?,?)").run(userId,targetRole.id,r.actor.id,now());else {if(role==="Super Admin"&&Number((sqlite.prepare("SELECT COUNT(*) n FROM user_roles ur JOIN users u ON u.id=ur.user_id WHERE ur.role_id=? AND u.status='ACTIVE'").get(targetRole.id) as {n:number}).n)<=1)throw new Error("LAST_ADMIN");sqlite.prepare("DELETE FROM user_roles WHERE user_id=? AND role_id=?").run(userId,targetRole.id);}}else{if(!permissionCode)throw new Error("INPUT");if(!isSuperAdmin(r.actor)&&!r.actor.permissions.includes(permissionCode))throw new Error("SCOPE");const permission=sqlite.prepare("SELECT id FROM permissions WHERE code=?").get(permissionCode) as {id:string}|undefined;if(!permission)throw new Error("UNKNOWN");if(action==="grant-permission")sqlite.prepare("INSERT OR IGNORE INTO user_permissions(user_id,permission_id,assigned_by,assigned_at) VALUES(?,?,?,?)").run(userId,permission.id,r.actor.id,now());else sqlite.prepare("DELETE FROM user_permissions WHERE user_id=? AND permission_id=?").run(userId,permission.id);}audit(r.actor.id,`USER_${action.toUpperCase()}`,userId,{role:role??null,permissionCode:permissionCode??null,reason:reason??null});notify(userId,"access.changed","Access updated","An administrator changed your access assignments.",userId);})();}catch(e){const message=e instanceof Error&&e.message==="SCOPE"?"Grant exceeds your delegated authority.":e instanceof Error&&e.message==="LAST_ADMIN"?"Cannot remove the final active Super Admin.":e instanceof Error&&e.message==="UNKNOWN"||e instanceof Error&&e.message==="UNKNOWN_ROLE"?"Unknown role or permission.":"Invalid assignment.";return Response.json({error:{code:"FORBIDDEN",message}},{status:403});}}
- else {if(!isSuperAdmin(r.actor))return Response.json({error:{code:"FORBIDDEN",message:"Only Super Admins can change account status."}},{status:403});if(["suspend","deactivate"].includes(action)&&userId===r.actor.id)return Response.json({error:{code:"SELF_LOCKOUT",message:"You cannot disable your own account."}},{status:409});if(["suspend","deactivate"].includes(action)&&sqlite.prepare("SELECT 1 FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id WHERE ur.user_id=? AND ro.name='Super Admin'").get(userId)){const active=Number((sqlite.prepare("SELECT COUNT(*) n FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id JOIN users u ON u.id=ur.user_id WHERE ro.name='Super Admin' AND u.status='ACTIVE'").get() as {n:number}).n);if(active<=1)return Response.json({error:{code:"FINAL_SUPER_ADMIN",message:"Cannot disable the final active Super Admin."}},{status:409});}const tx=sqlite.transaction(()=>{const status=action==="suspend"?"SUSPENDED":action==="deactivate"?"DEACTIVATED":"ACTIVE";sqlite.prepare("UPDATE users SET status=?,updated_at=? WHERE id=?").run(status,now(),userId);if(action!=="reactivate")sqlite.prepare("UPDATE sessions SET status='REVOKED',logout_at=?,reason=? WHERE user_id=? AND status='ACTIVE'").run(now(),action==="suspend"?"ACCOUNT_SUSPENDED":"ACCOUNT_DEACTIVATED",userId);audit(r.actor.id,`USER_${action.toUpperCase()}`,userId,{reason:reason??null});notify(userId,`account.${action}`,action==="suspend"?"Account suspended":action==="deactivate"?"Account deactivated":"Account reactivated",action==="suspend"?"Your account has been suspended.":action==="deactivate"?"Your account has been deactivated.":"Your account has been reactivated.",userId);});tx();}
- return json({updated:true});}
+export async function GET(req: Request) {
+  const r = await actorOrError();
+  if ("response" in r) return r.response;
+  if (!isAdmin(r.actor))
+    return Response.json(
+      { error: { code: "FORBIDDEN", message: "Admin access required." } },
+      { status: 403 },
+    );
+  const url = new URL(req.url);
+  const q = url.searchParams.get("q") ?? "";
+  const status = url.searchParams.get("status");
+  const page = Math.max(1, Number(url.searchParams.get("page") ?? 1) || 1);
+  const limit = 25;
+  const scope = isSuperAdmin(r.actor) ? "%" : r.actor.organizationId;
+  const rows = sqlite
+    .prepare(
+      `SELECT u.id,u.name,u.email,u.department,u.job_title,u.status,u.requested_role,u.created_at,group_concat(DISTINCT r.name) roles FROM users u LEFT JOIN user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id WHERE u.organization_id LIKE ? AND (u.name LIKE ? OR u.email LIKE ?) AND (? IS NULL OR u.status=?) GROUP BY u.id ORDER BY u.created_at DESC LIMIT ? OFFSET ?`,
+    )
+    .all(scope, `%${q}%`, `%${q}%`, status, status, limit, (page - 1) * limit);
+  return json({
+    users: rows,
+    page,
+    limit,
+    total: Number(
+      (
+        sqlite
+          .prepare(
+            "SELECT COUNT(*) n FROM users WHERE organization_id LIKE ? AND (name LIKE ? OR email LIKE ?) AND (? IS NULL OR status=?)",
+          )
+          .get(scope, `%${q}%`, `%${q}%`, status, status) as { n: number }
+      ).n,
+    ),
+  });
+}
+const mutation = z.object({
+  action: z.enum([
+    "approve",
+    "reject",
+    "suspend",
+    "deactivate",
+    "reactivate",
+    "assign-role",
+    "revoke-role",
+    "grant-permission",
+    "revoke-permission",
+  ]),
+  reason: z.string().max(500).optional(),
+  role: z.string().optional(),
+  permissionCode: z.string().optional(),
+});
+export async function PATCH(req: Request) {
+  const r = await actorOrError();
+  if ("response" in r) return r.response;
+  if (!isAdmin(r.actor))
+    return Response.json(
+      { error: { code: "FORBIDDEN", message: "Admin access required." } },
+      { status: 403 },
+    );
+  const body = await req.json().catch(() => null);
+  const parsed = z.object({ userId: z.string().uuid(), ...mutation.shape }).safeParse(body);
+  if (!parsed.success)
+    return Response.json(
+      { error: { code: "VALIDATION_ERROR", message: "Invalid update." } },
+      { status: 400 },
+    );
+  const { userId, action, reason, role, permissionCode } = parsed.data;
+  const user = sqlite
+    .prepare(
+      "SELECT id,status,organization_id,requested_role FROM users WHERE id=? AND (?=1 OR organization_id=?)",
+    )
+    .get(userId, isSuperAdmin(r.actor) ? 1 : 0, r.actor.organizationId) as
+    | { id: string; status: string; organization_id: string; requested_role: string | null }
+    | undefined;
+  if (!user)
+    return Response.json(
+      { error: { code: "NOT_FOUND", message: "User not found." } },
+      { status: 404 },
+    );
+  if (action === "approve" || action === "reject") {
+    if (!r.actor.permissions.includes("registrations:review") && !isSuperAdmin(r.actor))
+      return Response.json(
+        { error: { code: "FORBIDDEN", message: "Registration review permission required." } },
+        { status: 403 },
+      );
+    if (user.status !== "PENDING")
+      return Response.json(
+        { error: { code: "CONFLICT", message: "Registration is no longer pending." } },
+        { status: 409 },
+      );
+    if (action === "reject" && !reason?.trim())
+      return Response.json(
+        { error: { code: "REASON_REQUIRED", message: "Provide a rejection reason." } },
+        { status: 400 },
+      );
+    const tx = sqlite.transaction(() => {
+      const assignedRole = role ?? user.requested_role ?? "Backend Engineer";
+      if (action === "approve") {
+        const allowed = isSuperAdmin(r.actor)
+          ? [
+              "HR",
+              "Backend Engineer",
+              "DevOps Engineer",
+              "Manager",
+              "Admin",
+              "Super Admin",
+            ].includes(assignedRole)
+          : ["HR", "Backend Engineer", "DevOps Engineer", "Manager"].includes(assignedRole);
+        if (!allowed) throw new Error("SCOPE");
+        if (!sqlite.prepare("SELECT id FROM roles WHERE name=?").get(assignedRole))
+          throw new Error("UNKNOWN_ROLE");
+      }
+      sqlite
+        .prepare(
+          "UPDATE users SET status=?,approved_by=?,approved_at=?,rejection_reason=?,updated_at=? WHERE id=?",
+        )
+        .run(
+          action === "approve" ? "ACTIVE" : "REJECTED",
+          action === "approve" ? r.actor.id : null,
+          action === "approve" ? now() : null,
+          action === "reject" ? reason : null,
+          now(),
+          userId,
+        );
+      if (action === "approve")
+        sqlite
+          .prepare(
+            "INSERT OR IGNORE INTO user_roles(user_id,role_id,assigned_by,assigned_at) VALUES(?,?,?,?)",
+          )
+          .run(userId, assignedRole, r.actor.id, now());
+      audit(r.actor.id, `REGISTRATION_${action.toUpperCase()}`, userId, {
+        reason: reason ?? null,
+        role: action === "approve" ? assignedRole : null,
+      });
+      notify(
+        userId,
+        `registration.${action}`,
+        action === "approve" ? "Registration approved" : "Registration update",
+        action === "approve"
+          ? "Your account is now active."
+          : `Your registration was declined. ${reason ?? ""}`,
+        userId,
+      );
+    });
+    try {
+      tx();
+    } catch (e) {
+      const code =
+        e instanceof Error && e.message === "SCOPE"
+          ? "This role is outside your scope."
+          : e instanceof Error && e.message === "UNKNOWN_ROLE"
+            ? "Unknown role."
+            : "Could not update registration.";
+      return Response.json({ error: { code: "FORBIDDEN", message: code } }, { status: 403 });
+    }
+  } else if (
+    action === "assign-role" ||
+    action === "revoke-role" ||
+    action === "grant-permission" ||
+    action === "revoke-permission"
+  ) {
+    if (!isSuperAdmin(r.actor) && !r.actor.permissions.includes("permissions:manage"))
+      return Response.json(
+        { error: { code: "FORBIDDEN", message: "Permission management capability required." } },
+        { status: 403 },
+      );
+    if (userId === r.actor.id)
+      return Response.json(
+        {
+          error: {
+            code: "SELF_ESCALATION",
+            message: "You cannot change your own roles or permissions.",
+          },
+        },
+        { status: 409 },
+      );
+    try {
+      sqlite.transaction(() => {
+        if (action.endsWith("role")) {
+          if (!role) throw new Error("INPUT");
+          const targetRole = sqlite.prepare("SELECT id,name FROM roles WHERE name=?").get(role) as
+            { id: string; name: string } | undefined;
+          if (!targetRole) throw new Error("UNKNOWN");
+          if (!isSuperAdmin(r.actor)) {
+            const granted = sqlite
+              .prepare(
+                "SELECT p.code FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=?",
+              )
+              .all(targetRole.id) as { code: string }[];
+            if (
+              ["Admin", "Super Admin"].includes(role) ||
+              granted.some((permission) => !r.actor.permissions.includes(permission.code))
+            )
+              throw new Error("SCOPE");
+          }
+          if (action === "assign-role")
+            sqlite
+              .prepare(
+                "INSERT OR IGNORE INTO user_roles(user_id,role_id,assigned_by,assigned_at) VALUES(?,?,?,?)",
+              )
+              .run(userId, targetRole.id, r.actor.id, now());
+          else {
+            if (
+              role === "Super Admin" &&
+              Number(
+                (
+                  sqlite
+                    .prepare(
+                      "SELECT COUNT(*) n FROM user_roles ur JOIN users u ON u.id=ur.user_id WHERE ur.role_id=? AND u.status='ACTIVE'",
+                    )
+                    .get(targetRole.id) as { n: number }
+                ).n,
+              ) <= 1
+            )
+              throw new Error("LAST_ADMIN");
+            sqlite
+              .prepare("DELETE FROM user_roles WHERE user_id=? AND role_id=?")
+              .run(userId, targetRole.id);
+          }
+        } else {
+          if (!permissionCode) throw new Error("INPUT");
+          if (!isSuperAdmin(r.actor) && !r.actor.permissions.includes(permissionCode))
+            throw new Error("SCOPE");
+          const permission = sqlite
+            .prepare("SELECT id FROM permissions WHERE code=?")
+            .get(permissionCode) as { id: string } | undefined;
+          if (!permission) throw new Error("UNKNOWN");
+          if (action === "grant-permission")
+            sqlite
+              .prepare(
+                "INSERT OR IGNORE INTO user_permissions(user_id,permission_id,assigned_by,assigned_at) VALUES(?,?,?,?)",
+              )
+              .run(userId, permission.id, r.actor.id, now());
+          else
+            sqlite
+              .prepare("DELETE FROM user_permissions WHERE user_id=? AND permission_id=?")
+              .run(userId, permission.id);
+        }
+        audit(r.actor.id, `USER_${action.toUpperCase()}`, userId, {
+          role: role ?? null,
+          permissionCode: permissionCode ?? null,
+          reason: reason ?? null,
+        });
+        notify(
+          userId,
+          "access.changed",
+          "Access updated",
+          "An administrator changed your access assignments.",
+          userId,
+        );
+      })();
+    } catch (e) {
+      const message =
+        e instanceof Error && e.message === "SCOPE"
+          ? "Grant exceeds your delegated authority."
+          : e instanceof Error && e.message === "LAST_ADMIN"
+            ? "Cannot remove the final active Super Admin."
+            : (e instanceof Error && e.message === "UNKNOWN") ||
+                (e instanceof Error && e.message === "UNKNOWN_ROLE")
+              ? "Unknown role or permission."
+              : "Invalid assignment.";
+      return Response.json({ error: { code: "FORBIDDEN", message } }, { status: 403 });
+    }
+  } else {
+    if (!isSuperAdmin(r.actor))
+      return Response.json(
+        { error: { code: "FORBIDDEN", message: "Only Super Admins can change account status." } },
+        { status: 403 },
+      );
+    if (["suspend", "deactivate"].includes(action) && userId === r.actor.id)
+      return Response.json(
+        { error: { code: "SELF_LOCKOUT", message: "You cannot disable your own account." } },
+        { status: 409 },
+      );
+    if (
+      ["suspend", "deactivate"].includes(action) &&
+      sqlite
+        .prepare(
+          "SELECT 1 FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id WHERE ur.user_id=? AND ro.name='Super Admin'",
+        )
+        .get(userId)
+    ) {
+      const active = Number(
+        (
+          sqlite
+            .prepare(
+              "SELECT COUNT(*) n FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id JOIN users u ON u.id=ur.user_id WHERE ro.name='Super Admin' AND u.status='ACTIVE'",
+            )
+            .get() as { n: number }
+        ).n,
+      );
+      if (active <= 1)
+        return Response.json(
+          {
+            error: {
+              code: "FINAL_SUPER_ADMIN",
+              message: "Cannot disable the final active Super Admin.",
+            },
+          },
+          { status: 409 },
+        );
+    }
+    const tx = sqlite.transaction(() => {
+      const status =
+        action === "suspend" ? "SUSPENDED" : action === "deactivate" ? "DEACTIVATED" : "ACTIVE";
+      sqlite
+        .prepare("UPDATE users SET status=?,updated_at=? WHERE id=?")
+        .run(status, now(), userId);
+      if (action !== "reactivate")
+        sqlite
+          .prepare(
+            "UPDATE sessions SET status='REVOKED',logout_at=?,reason=? WHERE user_id=? AND status='ACTIVE'",
+          )
+          .run(now(), action === "suspend" ? "ACCOUNT_SUSPENDED" : "ACCOUNT_DEACTIVATED", userId);
+      audit(r.actor.id, `USER_${action.toUpperCase()}`, userId, { reason: reason ?? null });
+      notify(
+        userId,
+        `account.${action}`,
+        action === "suspend"
+          ? "Account suspended"
+          : action === "deactivate"
+            ? "Account deactivated"
+            : "Account reactivated",
+        action === "suspend"
+          ? "Your account has been suspended."
+          : action === "deactivate"
+            ? "Your account has been deactivated."
+            : "Your account has been reactivated.",
+        userId,
+      );
+    });
+    tx();
+  }
+  return json({ updated: true });
+}

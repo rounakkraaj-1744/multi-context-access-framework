@@ -14,20 +14,20 @@
 
 ## Technical checks
 
-| Check | Result | Evidence |
-|---|---|---|
-| All scenario families generated | Pass | All 12 IDs present |
-| B1–B6 distinguish predicted differences | Pass | B1/B2 differ on S2; B3/B5 on S6; B4/B5 on S3; B5/B6 on a VPN threshold boundary fixture |
-| S7 baseline denial | Pass | All 6 systems DENY both generated requests |
-| Independent intent assignment | Pass | Benign S2 with unknown network and violating S1 with normal device context generated; labels are assigned before evaluation |
-| Step-up simulation | Pass | Benign pass, violating fail, S12 uses seeded probability; repeated per-request outcomes identical across systems and reruns |
-| Degradation operator | Pass | Independently sampled per item; measured rates 0, 0.1050, 0.2083, 0.4073 for targets 0, 0.1, 0.2, 0.4 |
-| Operation assignment | Pass | Missing/stale/unverifiable/contradictory counts recorded for every rate in pilot JSON |
-| Hand-checkable metrics | Pass | FAR .5, FRR .5, CR .5, precision 1/3, recall .5, F1 .4, end-to-end FAR .5 |
-| Independent replay | Pass | 96/96 traces matched the independent Eq. (19) evaluator |
-| Trace completeness | Pass | 96/96 MCAC traces complete in this pilot |
-| Latency sample collection | Pass | Evaluator invocation only; reference replay and persistence excluded; 2 warmups and 4 measured calls per system |
-| Manuscript PEP-to-PDP latency boundary | **Fail** | No PEP/PDP adapter exists in the experiment harness, so the Section XVII interval is not verified |
+| Check                                   | Result   | Evidence                                                                                                                    |
+| --------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| All scenario families generated         | Pass     | All 12 IDs present                                                                                                          |
+| B1–B6 distinguish predicted differences | Pass     | B1/B2 differ on S2; B3/B5 on S6; B4/B5 on S3; B5/B6 on a VPN threshold boundary fixture                                     |
+| S7 baseline denial                      | Pass     | All 6 systems DENY both generated requests                                                                                  |
+| Independent intent assignment           | Pass     | Benign S2 with unknown network and violating S1 with normal device context generated; labels are assigned before evaluation |
+| Step-up simulation                      | Pass     | Benign pass, violating fail, S12 uses seeded probability; repeated per-request outcomes identical across systems and reruns |
+| Degradation operator                    | Pass     | Independently sampled per item; measured rates 0, 0.1050, 0.2083, 0.4073 for targets 0, 0.1, 0.2, 0.4                       |
+| Operation assignment                    | Pass     | Missing/stale/unverifiable/contradictory counts recorded for every rate in pilot JSON                                       |
+| Hand-checkable metrics                  | Pass     | FAR .5, FRR .5, CR .5, precision 1/3, recall .5, F1 .4, end-to-end FAR .5                                                   |
+| Independent replay                      | Pass     | 96/96 traces matched the independent Eq. (19) evaluator                                                                     |
+| Trace completeness                      | Pass     | 96/96 MCAC traces complete in this pilot                                                                                    |
+| Latency sample collection               | Pass     | Evaluator invocation only; reference replay and persistence excluded; 2 warmups and 4 measured calls per system             |
+| Manuscript PEP-to-PDP latency boundary  | **Fail** | No PEP/PDP adapter exists in the experiment harness, so the Section XVII interval is not verified                           |
 
 These are historical first-pilot checks, not evidence of comparative effectiveness. The 24-request pilot is too small for inferential reporting. Historical descriptive metrics in `pilot-report.json` are not paper results. Context coverage is null because Eq. (18) has an undefined zero-reference denominator for baseline-short-circuit decisions. No values from that report should populate manuscript results tables.
 

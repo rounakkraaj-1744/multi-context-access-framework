@@ -8,14 +8,14 @@ The historical pilot used seed `1`, 2 requests per family (24 requests total) an
 
 ## Table XI placeholder
 
-| System | FAR | FRR | CR | Precision | F1 | End-to-end FAR | p50 / p95 / p99 (ms) | Replay fidelity |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| B1 | Pending | Pending | Pending | Pending | Pending | Pending | Pending | n/a |
-| B2 | Pending | Pending | Pending | Pending | Pending | Pending | Pending | n/a |
-| B3 | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
-| B4 | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
-| B5 | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
-| B6 | Pending | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
+| System |     FAR |     FRR |      CR | Precision |      F1 | End-to-end FAR | p50 / p95 / p99 (ms) | Replay fidelity |
+| ------ | ------: | ------: | ------: | --------: | ------: | -------------: | -------------------: | --------------: |
+| B1     | Pending | Pending | Pending |   Pending | Pending |        Pending |              Pending |             n/a |
+| B2     | Pending | Pending | Pending |   Pending | Pending |        Pending |              Pending |             n/a |
+| B3     | Pending | Pending | Pending |   Pending | Pending |        Pending |              Pending |         Pending |
+| B4     | Pending | Pending | Pending |   Pending | Pending |        Pending |              Pending |         Pending |
+| B5     | Pending | Pending | Pending |   Pending | Pending |        Pending |              Pending |         Pending |
+| B6     | Pending | Pending | Pending |   Pending | Pending |        Pending |              Pending |         Pending |
 
 Context coverage, corrected Section XVII PEP-to-PDP latency, CPU/memory overhead and throughput remain unreported. The new timing wrapper is unit-tested, but corrected p50/p95/p99 have not been empirically measured and the latency gate has not passed. Context coverage has an unresolved zero-denominator case; throughput lacks an approved p95 bound/load procedure. Degradation results must be stratified by resource sensitivity in a future authorized run.
 

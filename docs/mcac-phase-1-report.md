@@ -44,15 +44,15 @@ The engine is **not activated in the existing authorization routes**. The curren
 
 ## Validation results
 
-| Command | Result |
-|---|---|
-| Baseline before implementation: `npm test -- --reporter=dot` | 2 files, 31 tests passed |
-| `npm test -- --reporter=dot` | 4 files, 70 tests passed |
-| `npm run typecheck` | Passed (`tsc --noEmit`) |
-| `npm run lint` | 0 errors; 2 existing warnings in `scripts/research-evaluate.mts` (`Family`, `chain` unused) |
-| `npm run build` | Turbopack panic in CSS loader: child process/port binding returns `Operation not permitted`; repeated outside sandbox with same outcome |
-| `npm run build:webpack` | Passed production build, TypeScript phase, static generation and route listing |
-| `bun test` | Unsupported runner path: existing integration suite fails because Bun lacks `vi.hoisted`; Bun 1.2.17 then panics in the SQLite test worker. Use configured Vitest via `npm test`; no test was skipped. |
+| Command                                                      | Result                                                                                                                                                                                                 |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Baseline before implementation: `npm test -- --reporter=dot` | 2 files, 31 tests passed                                                                                                                                                                               |
+| `npm test -- --reporter=dot`                                 | 4 files, 70 tests passed                                                                                                                                                                               |
+| `npm run typecheck`                                          | Passed (`tsc --noEmit`)                                                                                                                                                                                |
+| `npm run lint`                                               | 0 errors; 2 existing warnings in `scripts/research-evaluate.mts` (`Family`, `chain` unused)                                                                                                            |
+| `npm run build`                                              | Turbopack panic in CSS loader: child process/port binding returns `Operation not permitted`; repeated outside sandbox with same outcome                                                                |
+| `npm run build:webpack`                                      | Passed production build, TypeScript phase, static generation and route listing                                                                                                                         |
+| `bun test`                                                   | Unsupported runner path: existing integration suite fails because Bun lacks `vi.hoisted`; Bun 1.2.17 then panics in the SQLite test worker. Use configured Vitest via `npm test`; no test was skipped. |
 
 Next.js 16 Route Handler documentation was read before route-related implementation planning. The formal engine itself does not import Next.js, React, SQLite, HTTP, environment variables or an implicit clock. SQLite is isolated in `sqlite-store.ts`.
 

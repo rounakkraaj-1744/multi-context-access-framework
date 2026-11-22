@@ -1,15 +1,8 @@
 {
   "configId": "mcac-phase2-provisional-pilot-v1",
   "parameters": {
-    "workHours": [
-      9,
-      17
-    ],
-    "allowedNetworks": [
-      "corporate",
-      "vpn",
-      "known"
-    ],
+    "workHours": [9, 17],
+    "allowedNetworks": ["corporate", "vpn", "known"],
     "frequencyLimits": {
       "corporate": 20,
       "vpn": 10,
@@ -42,12 +35,5 @@
     "mimic-verification probability",
     "calibration objective/search space"
   ],
-  "systems": [
-    "B1",
-    "B2",
-    "B3",
-    "B4",
-    "B5",
-    "B6"
-  ]
+  "systems": ["B1", "B2", "B3", "B4", "B5", "B6"]
 }

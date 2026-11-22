@@ -15,9 +15,7 @@
       },
       "expected": "ALLOW",
       "actual": "ALLOW",
-      "reasonCodes": [
-        "PERMISSION_AND_CONTEXT_VALID"
-      ],
+      "reasonCodes": ["PERMISSION_AND_CONTEXT_VALID"],
       "baseline": "ALLOW",
       "sensitivity": "LOW",
       "stepUpOutcome": "N/A"
@@ -36,9 +34,7 @@
       },
       "expected": "DENY",
       "actual": "DENY",
-      "reasonCodes": [
-        "UNREGISTERED_DEVICE"
-      ],
+      "reasonCodes": ["UNREGISTERED_DEVICE"],
       "baseline": "ALLOW",
       "sensitivity": "HIGH",
       "stepUpOutcome": "N/A"
@@ -57,9 +53,7 @@
       },
       "expected": "DENY",
       "actual": "DENY",
-      "reasonCodes": [
-        "OUTSIDE_BUSINESS_HOURS"
-      ],
+      "reasonCodes": ["OUTSIDE_BUSINESS_HOURS"],
       "baseline": "ALLOW",
       "sensitivity": "HIGH",
       "stepUpOutcome": "N/A"
@@ -78,9 +72,7 @@
       },
       "expected": "DENY",
       "actual": "DENY",
-      "reasonCodes": [
-        "UNKNOWN_NETWORK"
-      ],
+      "reasonCodes": ["UNKNOWN_NETWORK"],
       "baseline": "ALLOW",
       "sensitivity": "HIGH",
       "stepUpOutcome": "N/A"
@@ -99,9 +91,7 @@
       },
       "expected": "DENY",
       "actual": "DENY",
-      "reasonCodes": [
-        "REQUEST_RATE_EXCEEDED"
-      ],
+      "reasonCodes": ["REQUEST_RATE_EXCEEDED"],
       "baseline": "ALLOW",
       "sensitivity": "HIGH",
       "stepUpOutcome": "N/A"
@@ -120,9 +110,7 @@
       },
       "expected": "DENY",
       "actual": "DENY",
-      "reasonCodes": [
-        "UNUSUAL_SEQUENCE"
-      ],
+      "reasonCodes": ["UNUSUAL_SEQUENCE"],
       "baseline": "ALLOW",
       "sensitivity": "HIGH",
       "stepUpOutcome": "N/A"
@@ -141,9 +129,7 @@
       },
       "expected": "DENY",
       "actual": "DENY",
-      "reasonCodes": [
-        "CONTEXT_UNAVAILABLE"
-      ],
+      "reasonCodes": ["CONTEXT_UNAVAILABLE"],
       "baseline": "ALLOW",
       "sensitivity": "HIGH",
       "stepUpOutcome": "N/A"
@@ -162,9 +148,7 @@
       },
       "expected": "DENY",
       "actual": "DENY",
-      "reasonCodes": [
-        "STALE_CONTEXT"
-      ],
+      "reasonCodes": ["STALE_CONTEXT"],
       "baseline": "ALLOW",
       "sensitivity": "HIGH",
       "stepUpOutcome": "N/A"
@@ -202,9 +186,7 @@
       },
       "expected": "DENY",
       "actual": "DENY",
-      "reasonCodes": [
-        "MISSING_PERMISSION"
-      ],
+      "reasonCodes": ["MISSING_PERMISSION"],
       "baseline": "DENY",
       "sensitivity": "HIGH",
       "stepUpOutcome": "N/A"
@@ -223,9 +205,7 @@
       },
       "expected": "DENY",
       "actual": "DENY",
-      "reasonCodes": [
-        "OUTSIDE_BUSINESS_HOURS"
-      ],
+      "reasonCodes": ["OUTSIDE_BUSINESS_HOURS"],
       "baseline": "ALLOW",
       "sensitivity": "HIGH",
       "stepUpOutcome": "N/A"
@@ -244,9 +224,7 @@
       },
       "expected": "STEP_UP_AUTH",
       "actual": "STEP_UP_AUTH",
-      "reasonCodes": [
-        "STEP_UP_REQUIRED"
-      ],
+      "reasonCodes": ["STEP_UP_REQUIRED"],
       "baseline": "ALLOW",
       "sensitivity": "LOW",
       "stepUpOutcome": "NOT_SIMULATED"

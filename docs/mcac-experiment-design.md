@@ -8,14 +8,14 @@ The complete manuscript was extracted from the supplied PDF and Sections XVI–X
 
 ## Baselines
 
-| ID | Evaluator | Implemented behavior |
-|---|---|---|
-| B1 | Static RBAC | Returns ALLOW iff baseline predicate is true, otherwise DENY. No context evaluation or trace. |
-| B2 | Static attribute policy | Baseline gate, then fixed work-hour, network-class and registered-device predicates. Missing values make the relevant predicate false. Ignores behavior items and validity statuses. |
-| B3 | MCAC-E | Runs the formal engine with behavioral conditions removed; environmental conditions, validity statuses and configured interactions remain. |
-| B4 | MCAC-B | Runs the formal engine with environmental conditions removed; behavioral conditions, validity statuses and configured interactions remain. |
-| B5 | Full MCAC | Both condition categories, validity statuses, environment-conditioned thresholds and declared Γ outcomes. |
-| B6 | MCAC without interaction | Both categories and validity statuses; uses a constant frequency threshold and disables the environment-conditioned threshold and Γ mechanisms. |
+| ID  | Evaluator                | Implemented behavior                                                                                                                                                                 |
+| --- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| B1  | Static RBAC              | Returns ALLOW iff baseline predicate is true, otherwise DENY. No context evaluation or trace.                                                                                        |
+| B2  | Static attribute policy  | Baseline gate, then fixed work-hour, network-class and registered-device predicates. Missing values make the relevant predicate false. Ignores behavior items and validity statuses. |
+| B3  | MCAC-E                   | Runs the formal engine with behavioral conditions removed; environmental conditions, validity statuses and configured interactions remain.                                           |
+| B4  | MCAC-B                   | Runs the formal engine with environmental conditions removed; behavioral conditions, validity statuses and configured interactions remain.                                           |
+| B5  | Full MCAC                | Both condition categories, validity statuses, environment-conditioned thresholds and declared Γ outcomes.                                                                            |
+| B6  | MCAC without interaction | Both categories and validity statuses; uses a constant frequency threshold and disables the environment-conditioned threshold and Γ mechanisms.                                      |
 
 Each evaluator is a separate entry in `evaluators`; the ablations construct their own policy snapshots and invoke the shared formal decision engine only where the manuscript specifies MCAC semantics. B5 is not weakened to match another system.
 
@@ -27,11 +27,11 @@ The pilot stores all generated inputs, including the blocked S9 family. S9 uses 
 
 ## Seed splits, size and freeze
 
-| Set | Seeds | Instances per family | Requests per seed |
-|---|---:|---:|---:|
-| Calibration | 1–5 | 250 | 3,000 |
-| Test | 101–130 | 250 | 3,000 |
-| Historical first pilot (not repeated) | seed 1 | 2 | 24 |
+| Set                                   |   Seeds | Instances per family | Requests per seed |
+| ------------------------------------- | ------: | -------------------: | ----------------: |
+| Calibration                           |     1–5 |                  250 |             3,000 |
+| Test                                  | 101–130 |                  250 |             3,000 |
+| Historical first pilot (not repeated) |  seed 1 |                    2 |                24 |
 
 All six systems receive the same request inputs for a seed. Calibration and test manifests are separate. The policy and generator parameters are not frozen: the calibration objective/search space is unspecified, so calibration was not performed and test evaluation did not start.
 

@@ -23,11 +23,25 @@ export type Policy = {
 };
 export type Evaluation = { decision: Decision; reasonCodes: string[]; explanation: string };
 
-export function isWithinTimeWindow(now: Date, window: { start: string; end: string; timezone: string }): boolean {
+export function isWithinTimeWindow(
+  now: Date,
+  window: { start: string; end: string; timezone: string },
+): boolean {
   let parts: Record<string, string>;
   try {
-    parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: window.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now).map((part) => [part.type, part.value]));
-  } catch { return false; }
+    parts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: window.timezone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      })
+        .formatToParts(now)
+        .map((part) => [part.type, part.value]),
+    );
+  } catch {
+    return false;
+  }
   const current = Number(parts.hour) * 60 + Number(parts.minute);
   const [startHour, startMinute] = window.start.split(":").map(Number);
   const [endHour, endMinute] = window.end.split(":").map(Number);
@@ -39,7 +53,10 @@ export function isWithinTimeWindow(now: Date, window: { start: string; end: stri
 
 /** Explicit deny wins, then step-up, then grant. Missing/stale required context is denied. */
 export function evaluateAccess(input: {
-  permissions: string[]; requiredPermission: string; context: AccessContext; policies: Policy[];
+  permissions: string[];
+  requiredPermission: string;
+  context: AccessContext;
+  policies: Policy[];
 }): Evaluation {
   const reasons: string[] = [];
   const { context, policies } = input;
@@ -52,24 +69,48 @@ export function evaluateAccess(input: {
   for (const policy of policies) {
     // A policy with no conditions applies unconditionally, including DENY and STEP_UP.
     let valid = true;
-    const conditionFailure = (code: string) => { reasons.push(code); valid = false; if (policy.effect !== "DENY") failedRequiredCondition = true; };
-    if (policy.businessHoursOnly && !context.businessHours) conditionFailure("OUTSIDE_BUSINESS_HOURS");
-    if (policy.allowedTimeWindow && !isWithinTimeWindow(context.now, policy.allowedTimeWindow)) conditionFailure("OUTSIDE_ALLOWED_TIME_WINDOW");
-    if (policy.registeredDeviceOnly && !context.registeredDevice) conditionFailure("UNREGISTERED_DEVICE");
+    const conditionFailure = (code: string) => {
+      reasons.push(code);
+      valid = false;
+      if (policy.effect !== "DENY") failedRequiredCondition = true;
+    };
+    if (policy.businessHoursOnly && !context.businessHours)
+      conditionFailure("OUTSIDE_BUSINESS_HOURS");
+    if (policy.allowedTimeWindow && !isWithinTimeWindow(context.now, policy.allowedTimeWindow))
+      conditionFailure("OUTSIDE_ALLOWED_TIME_WINDOW");
+    if (policy.registeredDeviceOnly && !context.registeredDevice)
+      conditionFailure("UNREGISTERED_DEVICE");
     if (policy.knownNetworkOnly && !context.networkKnown) conditionFailure("UNKNOWN_NETWORK");
-    if (policy.maxRequests !== undefined && context.requestsInWindow > policy.maxRequests) conditionFailure("REQUEST_RATE_EXCEEDED");
+    if (policy.maxRequests !== undefined && context.requestsInWindow > policy.maxRequests)
+      conditionFailure("REQUEST_RATE_EXCEEDED");
     if (policy.denyUnusualSequence && context.unusualSequence) conditionFailure("UNUSUAL_SEQUENCE");
-    if (policy.maxContextAgeSeconds !== undefined && context.contextAgeSeconds > policy.maxContextAgeSeconds) conditionFailure("STALE_CONTEXT");
+    if (
+      policy.maxContextAgeSeconds !== undefined &&
+      context.contextAgeSeconds > policy.maxContextAgeSeconds
+    )
+      conditionFailure("STALE_CONTEXT");
     if (valid) matched.push(policy);
   }
   const applicableDeny = matched.some((p) => p.effect === "DENY");
   const applicableStepUp = matched.some((p) => p.effect === "STEP_UP_AUTH");
   let decision: Decision;
-  if (reasons.includes("MISSING_PERMISSION") || applicableDeny || failedRequiredCondition) decision = "DENY";
-  else if (applicableStepUp && !context.stepUpVerified) { decision = "STEP_UP_AUTH"; reasons.push("STEP_UP_REQUIRED"); }
-  else decision = "ALLOW";
+  if (reasons.includes("MISSING_PERMISSION") || applicableDeny || failedRequiredCondition)
+    decision = "DENY";
+  else if (applicableStepUp && !context.stepUpVerified) {
+    decision = "STEP_UP_AUTH";
+    reasons.push("STEP_UP_REQUIRED");
+  } else decision = "ALLOW";
   if (!reasons.length && decision === "ALLOW") reasons.push("PERMISSION_AND_CONTEXT_VALID");
-  return { decision, reasonCodes: [...new Set(reasons)], explanation: decision === "ALLOW" ? "Permission and contextual requirements passed." : decision === "STEP_UP_AUTH" ? "Additional verification is required before access." : "Access was denied by permission or contextual policy." };
+  return {
+    decision,
+    reasonCodes: [...new Set(reasons)],
+    explanation:
+      decision === "ALLOW"
+        ? "Permission and contextual requirements passed."
+        : decision === "STEP_UP_AUTH"
+          ? "Additional verification is required before access."
+          : "Access was denied by permission or contextual policy.",
+  };
 }
 
 export function evaluateRbac(permissions: string[], requiredPermission: string): Decision {
