@@ -1680,6 +1680,19 @@ function FormalMcacResearchPanel({
   const scenarios = data?.scenarios ?? [];
   const evaluation = data?.evaluation;
   const result = evaluation?.result;
+  const comparison = data?.comparison;
+  const comparisonMetrics = comparison?.metrics;
+  const comparisonResults = comparison?.results;
+  const comparisonReady =
+    typeof comparisonMetrics?.totalScenarios === "number" &&
+    typeof comparisonMetrics?.decisionDifferenceCount === "number" &&
+    typeof comparisonMetrics?.mcacRestrictionCount === "number" &&
+    typeof comparisonMetrics?.rbac?.allow === "number" &&
+    typeof comparisonMetrics?.rbac?.deny === "number" &&
+    typeof comparisonMetrics?.mcac?.allow === "number" &&
+    typeof comparisonMetrics?.mcac?.verify === "number" &&
+    typeof comparisonMetrics?.mcac?.deny === "number" &&
+    Array.isArray(comparisonResults);
   const contextItems = evaluation?.context
     ? [
         ...Object.values(evaluation.context.environmental),
@@ -1778,44 +1791,52 @@ function FormalMcacResearchPanel({
         })()}
       </div>}
 
-      {(isComparison || isOverview) && data?.comparison && (
+      {(isComparison || isOverview) && comparison && (
         <div className="panel">
           <div className="panel-title">
             <div>
               <h2>Formal RBAC vs MCAC comparison</h2>
               <p className="panel-subtitle">
-                Research demonstration · fixed policy {data.comparison.policyVersion}. These counts describe executed synthetic fixtures only; they are not real-world accuracy, FAR, FRR, or production effectiveness.
+                Research demonstration · fixed policy {comparison.policyVersion}. These counts describe executed synthetic fixtures only; they are not real-world accuracy, FAR, FRR, or production effectiveness.
               </p>
             </div>
           </div>
-          <div className="metric-grid">
-            <Metric label="Executed scenarios" value={String(data.comparison.metrics.totalScenarios)} icon="∑" />
-            <Metric label="Decision differences" value={String(data.comparison.metrics.decisionDifferenceCount)} icon="↔" />
-            <Metric label="MCAC restrictions" value={String(data.comparison.metrics.mcacRestrictionCount)} icon="⊣" />
-            <Metric label="RBAC ALLOW / DENY" value={`${data.comparison.metrics.rbac.allow} / ${data.comparison.metrics.rbac.deny}`} icon="♙" />
-            <Metric label="MCAC ALLOW / VERIFY / DENY" value={`${data.comparison.metrics.mcac.allow} / ${data.comparison.metrics.mcac.verify} / ${data.comparison.metrics.mcac.deny}`} icon="◎" />
-          </div>
-          <div className="table-wrap">
-            <table>
-              <thead><tr><th>SCENARIO</th><th>RBAC</th><th>FORMAL MCAC</th><th>DIFFERENCE</th><th>MCAC CONDITION / Γ / Θ CONTRIBUTIONS</th></tr></thead>
-              <tbody>
-                {data.comparison.results.map((comparison: any) => (
-                  <tr key={comparison.scenario.id}>
-                    <td><b>{comparison.scenario.name}</b><br /><code>{comparison.scenario.id}</code><details><summary>Same fixture inputs</summary><p>{comparison.scenario.description}</p><p>Resource/action: {comparison.baseline.resourceClass} / {comparison.baseline.action} · permission: {comparison.baseline.permission} ({comparison.baseline.granted ? "granted" : "not granted"})</p><pre className="research-json">{JSON.stringify(comparison.scenario.context, null, 2)}</pre></details></td>
-                    <td>{comparison.rbac.decision}</td>
-                    <td>{comparison.mcac.decision} · severity {comparison.mcac.severity}<br /><small>Policy {comparison.mcac.policyVersion}</small></td>
-                    <td>{comparison.differs ? "Yes" : "No"}{comparison.restricted ? " · MCAC restricted" : ""}</td>
-                    <td>
-                      <p>{comparison.explanation}</p>
-                      {comparison.mcac.conditions.length > 0 && <ul className="research-list">{comparison.mcac.conditions.map((condition: any) => <li key={condition.conditionId}><b>{condition.conditionId}</b> ({condition.category}; {condition.itemReferences.join(", ")}): {condition.outcome}, severity {condition.severity} · {condition.explanation}</li>)}</ul>}
-                      {comparison.mcac.gamma && <p>Γ: {comparison.mcac.gamma.constraints.map((entry: any) => `${entry.constraintId} ${entry.outcome}`).join("; ")} · effects {comparison.mcac.gamma.items.map((entry: any) => `${entry.itemKind} ${entry.effect}`).join(", ")}</p>}
-                      {comparison.mcac.theta.length > 0 && <p>Θ: {comparison.mcac.theta.map((entry: any) => entry.explanation).join("; ")}</p>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {comparisonReady ? (
+            <>
+              <div className="metric-grid">
+                <Metric label="Executed scenarios" value={String(comparisonMetrics.totalScenarios)} icon="∑" />
+                <Metric label="Decision differences" value={String(comparisonMetrics.decisionDifferenceCount)} icon="↔" />
+                <Metric label="MCAC restrictions" value={String(comparisonMetrics.mcacRestrictionCount)} icon="⊣" />
+                <Metric label="RBAC ALLOW / DENY" value={`${comparisonMetrics.rbac.allow} / ${comparisonMetrics.rbac.deny}`} icon="♙" />
+                <Metric label="MCAC ALLOW / VERIFY / DENY" value={`${comparisonMetrics.mcac.allow} / ${comparisonMetrics.mcac.verify} / ${comparisonMetrics.mcac.deny}`} icon="◎" />
+              </div>
+              <div className="table-wrap">
+                <table>
+                  <thead><tr><th>SCENARIO</th><th>RBAC</th><th>FORMAL MCAC</th><th>DIFFERENCE</th><th>MCAC CONDITION / Γ / Θ CONTRIBUTIONS</th></tr></thead>
+                  <tbody>
+                    {comparisonResults.map((comparisonRow: any) => (
+                      <tr key={comparisonRow.scenario.id}>
+                        <td><b>{comparisonRow.scenario.name}</b><br /><code>{comparisonRow.scenario.id}</code><details><summary>Same fixture inputs</summary><p>{comparisonRow.scenario.description}</p><p>Resource/action: {comparisonRow.baseline.resourceClass} / {comparisonRow.baseline.action} · permission: {comparisonRow.baseline.permission} ({comparisonRow.baseline.granted ? "granted" : "not granted"})</p><pre className="research-json">{JSON.stringify(comparisonRow.scenario.context, null, 2)}</pre></details></td>
+                        <td>{comparisonRow.rbac.decision}</td>
+                        <td>{comparisonRow.mcac.decision} · severity {comparisonRow.mcac.severity}<br /><small>Policy {comparisonRow.mcac.policyVersion}</small></td>
+                        <td>{comparisonRow.differs ? "Yes" : "No"}{comparisonRow.restricted ? " · MCAC restricted" : ""}</td>
+                        <td>
+                          <p>{comparisonRow.explanation}</p>
+                          {comparisonRow.mcac.conditions.length > 0 && <ul className="research-list">{comparisonRow.mcac.conditions.map((condition: any) => <li key={condition.conditionId}><b>{condition.conditionId}</b> ({condition.category}; {condition.itemReferences.join(", ")}): {condition.outcome}, severity {condition.severity} · {condition.explanation}</li>)}</ul>}
+                          {comparisonRow.mcac.gamma && <p>Γ: {comparisonRow.mcac.gamma.constraints.map((entry: any) => `${entry.constraintId} ${entry.outcome}`).join("; ")} · effects {comparisonRow.mcac.gamma.items.map((entry: any) => `${entry.itemKind} ${entry.effect}`).join(", ")}</p>}
+                          {comparisonRow.mcac.theta.length > 0 && <p>Θ: {comparisonRow.mcac.theta.map((entry: any) => entry.explanation).join("; ")}</p>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <p className="info-callout" role="alert">
+              The comparison response was incomplete, so its metrics and rows are unavailable. Run the comparison again; if this continues, check that the deployed page and research API are from the same deployment.
+            </p>
+          )}
         </div>
       )}
 

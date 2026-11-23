@@ -1,0 +1,13 @@
+For a local demonstration, use the working localhost version and follow this 5–7 minute flow:
+
+1. Introduce the portal. Sign in as the local Super Admin and briefly show the dashboard and role-based navigation.
+2. Show ordinary access control. Open Resources, request access to a resource, and explain that this is the live authorization path: it uses the account’s permissions and records the decision.
+3. Switch to the research demonstration. Open Formal MCAC Lab and point out the synthetic-fixture notice. Explain that these scenarios are isolated from live access decisions.
+4. Run a normal scenario. Select Normal valid access and run it. Show the baseline permission, final decision and severity.
+5. Explain the context and formal evaluation. Walk through the context status table, condition outcomes and Θ interaction. Then show the Γ constraint trace and how its result affects the decision.
+6. Compare the evaluators. Click Compare all fixtures: RBAC vs MCAC. Pick one row to explain the shared permission baseline and any context conditions behind a decision difference. Describe the counts as synthetic demonstration metrics, not real-world accuracy.
+7. Replay the run. Return to a completed scenario and click Replay this run. Show the original/replayed decision and Γ trace verification result.
+
+A useful closing line: “The portal demonstrates management and live authorization separately from the research lab, which evaluates fixed synthetic scenarios with the formal MCAC engine.”
+
+For the deployed Vercel site, I’d avoid demonstrating sign-in until its database persistence is addressed.

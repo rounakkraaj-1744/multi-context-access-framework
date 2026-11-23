@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import PortalPage from "@/app/portal-page";
+import Portal from "@/app/portal";
 
 export const instant = false;
 
@@ -46,5 +48,9 @@ export default async function PortalRoute({
   const initialSection = routeSections[route];
   if (!initialSection) notFound();
   const requireAdmin = ["users", "approvals", "resources", "policies", "mcac-drafts", "decisions", "sessions", "alerts", "incidents", "audit", "context-lab", "roles", "permissions", "permission-requests"].includes(route) || route.startsWith("research");
-  return <PortalPage initialSection={initialSection} requireAuth requireAdmin={requireAdmin} />;
+  return (
+    <Suspense fallback={<Portal actor={null} resources={[]} notices={[]} />}>
+      <PortalPage initialSection={initialSection} requireAuth requireAdmin={requireAdmin} />
+    </Suspense>
+  );
 }
