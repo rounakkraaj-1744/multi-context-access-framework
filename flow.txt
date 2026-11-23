@@ -1,13 +1,69 @@
-For a local demonstration, use the working localhost version and follow this 5–7 minute flow:
+## A smooth end-to-end demo
 
-1. Introduce the portal. Sign in as the local Super Admin and briefly show the dashboard and role-based navigation.
-2. Show ordinary access control. Open Resources, request access to a resource, and explain that this is the live authorization path: it uses the account’s permissions and records the decision.
-3. Switch to the research demonstration. Open Formal MCAC Lab and point out the synthetic-fixture notice. Explain that these scenarios are isolated from live access decisions.
-4. Run a normal scenario. Select Normal valid access and run it. Show the baseline permission, final decision and severity.
-5. Explain the context and formal evaluation. Walk through the context status table, condition outcomes and Θ interaction. Then show the Γ constraint trace and how its result affects the decision.
-6. Compare the evaluators. Click Compare all fixtures: RBAC vs MCAC. Pick one row to explain the shared permission baseline and any context conditions behind a decision difference. Describe the counts as synthetic demonstration metrics, not real-world accuracy.
-7. Replay the run. Return to a completed scenario and click Replay this run. Show the original/replayed decision and Γ trace verification result.
+The most complete sequence is to start with an Employee account, show a protected-resource decision and permission request, then switch to an Admin to review it. Finish with the Super Admin controls and the synthetic research lab.
 
-A useful closing line: “The portal demonstrates management and live authorization separately from the research lab, which evaluates fixed synthetic scenarios with the formal MCAC engine.”
+### 1. Prepare the demo
 
-For the deployed Vercel site, I’d avoid demonstrating sign-in until its database persistence is addressed.
+1. Start the site and open http://localhost:3000.
+2. Make sure the database is initialized and you have an Employee account. You can register through Request access, but an Admin must approve the registration before that account can sign in.
+3. Have the Admin and Super Admin demo credentials ready. The README lists development seed credentials; use them only on a local demo instance.
+4. If possible, prepare some existing access decisions or alerts. Empty monitoring pages are less useful to present.
+
+### 2. Show the Employee experience
+
+1. Sign in as the Employee and introduce the Overview: account status, roles, effective permissions, recent notifications, and protected resources.
+2. Open Resources and try one resource the account can access. Explain that the server evaluates the request and records its decision.
+3. Try a resource the account cannot access, if one is available. Show the denial, then open Access history to review the decision and its explanation.
+4. Open Profile to show identity, account status, assigned roles, and effective permissions.
+5. Submit a permission request with a business reason. Open Notifications and mark a notification as read if one is available.
+6. Sign out.
+
+### 3. Show the Admin review workflow
+
+1. Sign in as Admin and open Overview.
+2. Go to Approvals. If you created a pending registration earlier, approve it and assign its requested role. Otherwise, explain the queue using any existing pending registrations.
+3. Open Permission requests and review the request submitted by the Employee. Approve or reject it.
+4. Return to the Employee account, sign in again, and revisit Resources to show how the approved permission changes access. Then open Access history.
+
+### 4. Show administration and monitoring
+
+1. Back in the Admin workspace, open People to show the directory and account operations.
+2. Visit Sessions, Decisions, and Audit to explain session tracking, access evaluations, and the administrative activity record.
+3. Open Alerts and Incidents to show how detected patterns can be investigated and tracked. These pages may be empty without relevant activity.
+4. Open Context lab and run a stored scenario to demonstrate the prototype’s simulated contextual checks. Explain that these inputs are synthetic, not live device or location evidence.
+5. If the Admin role has access in your setup, show MCAC drafts as the policy drafting area.
+
+### 5. Show Super Admin configuration
+
+1. Sign out and sign in as Super Admin.
+2. Open Roles and Permissions to show role and permission management.
+3. Open Policies to show contextual policy configuration.
+4. If you make a change, keep it small and explain that privileged changes are audited.
+5. Visit the Admin views briefly to show the wider workspace.
+
+### 6. Finish with the research lab
+
+1. Open Research Overview and introduce it as a separate, synthetic demonstration.
+2. Go to Scenario Explorer, select a server-defined scenario, and run it.
+3. Walk through the result and its condition outcomes. Then open Context Inspector to examine the fixture inputs and their evaluator-classified validity.
+4. Visit Γ Consistency Inspector and Θ Threshold Inspector to show the consistency trace and threshold interactions.
+5. Open RBAC vs MCAC and execute the fixture comparison.
+6. Go to Trace Explorer & Replay, select the run, and use Replay and verify.
+7. Finish with Research Policy, then show Architecture, Methodology, Research Paper, or About Project if the audience wants more background.
+
+The research lab uses fixed synthetic fixtures and does not authorize live resource access. Research runs are held in a bounded in-memory store and can expire, so run the scenario shortly before showing its trace or replay.
+
+### Short version
+
+For a shorter presentation, show: Employee overview → allowed and denied resource attempt → permission request → Admin approval → Employee access history → Admin audit/alerts → Super Admin policy view → Scenario Explorer and replay.
+
+Almost. The steps cover the main user, Admin, Super Admin, and research flows, but they don’t explicitly visit every menu item.
+
+To make it a complete feature-by-feature walkthrough, also open:
+
+- Admin/Super Admin: Resources
+- Super Admin: MCAC drafts
+- Employee: Notifications and Profile, if you skipped them in the main sequence
+- Research information: Architecture, Methodology, Research Paper, and About Project
+
+Some screens may be empty unless you prepare data first, such as pending approvals, permission requests, access decisions, alerts, and incidents.

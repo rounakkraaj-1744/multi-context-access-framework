@@ -155,6 +155,7 @@ export default function Portal({
   const [data, setData] = useState<any>(null);
   const [flash, setFlash] = useState("");
   const [busy, setBusy] = useState(false);
+  const [resourceResult, setResourceResult] = useState<any>(null);
   const role: PortalRole = actor?.roles.includes("Super Admin")
     ? "Super Admin"
     : actor?.roles.includes("Admin")
@@ -257,7 +258,10 @@ export default function Portal({
       }
       result = await api("/api/access", { method: "POST", body: JSON.stringify(payload) });
     }
-    if (result.data?.decision === "ALLOW") message(`Allowed: ${result.data.resource.title}`);
+    if (result.data?.decision === "ALLOW") {
+      setResourceResult(result.data);
+      message(`Access granted: ${result.data.resource.title}`);
+    }
     else
       message(
         `${result.data?.decision ?? result.error?.code}: ${result.data?.explanation ?? result.error?.message ?? "Access unavailable"}`,
@@ -503,6 +507,7 @@ export default function Portal({
           <div className="resource-grid">
             <ResourceCards resources={resources} onAccess={access} />
           </div>
+      {resourceResult && <div className="resource-preview panel"><div className="panel-title"><div><div className="eyebrow">ACCESS GRANTED · {resourceResult.resource.classification}</div><h2>{resourceResult.resource.title}</h2></div><button className="button secondary" onClick={() => setResourceResult(null)}>Close</button></div><p>{resourceResult.resource.content}</p></div>}
           <div className="info-callout">
             <span>ⓘ</span>
             <div>
@@ -2085,8 +2090,9 @@ function ManagementPanel({
   const endpoint = section === "Roles" ? "roles" : section.toLowerCase();
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     setBusy(true);
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
     const body: any = Object.fromEntries(form.entries());
     if (section === "Roles")
       body.permissionCodes = String(body.permissionCodes ?? "")
@@ -2124,7 +2130,7 @@ function ManagementPanel({
     message(result.error?.message ?? `${section.slice(0, -1)} saved.`);
     if (!result.error) {
       setSelected(null);
-      event.currentTarget.reset();
+      formElement.reset();
       reload();
     }
   }
@@ -2150,7 +2156,7 @@ function ManagementPanel({
         title={`${section} management`}
         subtitle="Changes are validated server-side and recorded in the platform audit trail."
       />
-      <div className="two-col">
+      <div className="management-layout">
         <div className="panel">
           <PanelTitle title={`Create or update ${section.toLowerCase()}`} />
           <form
@@ -2229,6 +2235,7 @@ function ManagementPanel({
                 <label>
                   <input
                     type="checkbox"
+                    className="policy-checkbox"
                     name="enabled"
                     defaultChecked={selected ? Boolean(selected.enabled) : true}
                   />{" "}
@@ -2243,6 +2250,7 @@ function ManagementPanel({
                   <label key={key}>
                     <input
                       type="checkbox"
+                      className="policy-checkbox"
                       name={key}
                       defaultChecked={Boolean(
                         selected && JSON.parse(selected.conditions || "{}")[key],

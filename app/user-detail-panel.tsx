@@ -50,9 +50,10 @@ export default function UserDetailPanel({ detail, close, superAdmin, message, re
     if (!result.error) refresh();
   }
   return (
-    <div className="panel">
-      <div className="panel-title">
+    <div className="panel user-detail">
+      <div className="panel-title user-detail-heading">
         <div>
+          <div className="eyebrow">ACCOUNT DETAIL · {user.status}</div>
           <h2>{user.name}</h2>
           <p className="panel-subtitle">
             {user.email} · {user.department || "No department"} · {user.organization_id} ·{" "}
@@ -63,56 +64,25 @@ export default function UserDetailPanel({ detail, close, superAdmin, message, re
           Close
         </button>
       </div>
-      <div className="profile-row">
-        <span>Today&apos;s sessions</span>
-        <b>
-          {detail.daily?.sessions ?? 0} · {detail.daily?.active_sessions ?? 0} active
-        </b>
-      </div>
-      <div className="profile-row">
-        <span>First login / last explicit logout</span>
-        <b>
-          {format(detail.daily?.first_login)} / {format(detail.daily?.last_explicit_logout)}
-        </b>
-      </div>
+      <div className="detail-metrics"><div className="detail-stat"><span>Today&apos;s sessions</span><b>{detail.daily?.sessions ?? 0}</b><small>{detail.daily?.active_sessions ?? 0} active</small></div><div className="detail-stat"><span>First login</span><b>{format(detail.daily?.first_login)}</b><small>First recorded session</small></div><div className="detail-stat"><span>Last explicit logout</span><b>{format(detail.daily?.last_explicit_logout)}</b><small>Account activity</small></div></div>
+      <div className="detail-section">
       <h3>Assigned roles</h3>
       <div className="tag-list">
-        {detail.roles.length ? (
-          detail.roles.map((item: any) => (
-            <span className="tag" key={item.name}>
-              {item.name}
-              {superAdmin && (
-                <button
-                  aria-label={`Revoke ${item.name}`}
-                  onClick={() => void mutate({ action: "revoke-role", role: item.name })}
-                >
-                  ×
-                </button>
-              )}
-            </span>
-          ))
-        ) : (
-          <p>No roles assigned.</p>
-        )}
+        {detail.roles.length ? detail.roles.map((item: any) => <span className="tag" key={item.name}>{item.name}{superAdmin && <button aria-label={`Revoke ${item.name}`} onClick={() => void mutate({ action: "revoke-role", role: item.name })}>×</button>}</span>) : <p>No roles assigned.</p>}
       </div>
       <h3>Effective permissions</h3>
-      <div className="tag-list">
-        {detail.permissions.map((item: any) => (
-          <span className="tag" key={item.code}>
-            {item.code}
-          </span>
-        ))}
+      <div className="tag-list">{detail.permissions.length ? detail.permissions.map((item: any) => <span className="tag" key={item.code}>{item.code}</span>) : <p>No permissions assigned.</p>}</div>
       </div>
       {superAdmin && (
-        <div className="row-actions">
-          <select value={role} onChange={(event) => setRole(event.target.value)}>
+        <div className="detail-actions">
+          <label>Assign a role<select value={role} onChange={(event) => setRole(event.target.value)}>
             <option value="">Assign role…</option>
             {["HR", "Backend Engineer", "DevOps Engineer", "Manager", "Admin", "Super Admin"].map(
               (name) => (
                 <option key={name}>{name}</option>
               ),
             )}
-          </select>
+          </select></label>
           <button
             className="button tiny primary"
             disabled={!role}
@@ -141,7 +111,7 @@ export default function UserDetailPanel({ detail, close, superAdmin, message, re
           </button>
         </div>
       )}
-      <h3>Session history</h3>
+      <div className="detail-section"><h3>Session history</h3>
       {detail.sessions.length ? (
         <div className="table-wrap">
           <table>
@@ -172,7 +142,7 @@ export default function UserDetailPanel({ detail, close, superAdmin, message, re
       ) : (
         <p>No sessions recorded.</p>
       )}
-      <h3>Access decisions</h3>
+      </div><div className="detail-section"><h3>Access decisions</h3>
       {detail.decisions.length ? (
         <div className="table-wrap">
           <table>
@@ -201,7 +171,7 @@ export default function UserDetailPanel({ detail, close, superAdmin, message, re
       ) : (
         <p>No access events recorded.</p>
       )}
-      <h3>Context snapshots</h3>
+      </div><div className="detail-section"><h3>Context snapshots</h3>
       {detail.snapshots.length ? (
         detail.snapshots.map((snapshot: any) => (
           <details key={snapshot.id}>
@@ -214,7 +184,7 @@ export default function UserDetailPanel({ detail, close, superAdmin, message, re
       ) : (
         <p>No context recorded.</p>
       )}
-      <h3>Behavior alerts</h3>
+      </div><div className="detail-section"><h3>Behavior alerts</h3>
       {detail.behaviorAlerts?.length ? (
         detail.behaviorAlerts.map((alert: any) => (
           <details key={alert.id}>
@@ -228,7 +198,7 @@ export default function UserDetailPanel({ detail, close, superAdmin, message, re
       ) : (
         <p>No behavior alerts recorded.</p>
       )}
-      <h3>Related incidents</h3>
+      </div><div className="detail-section"><h3>Related incidents</h3>
       {detail.incidents?.length ? (
         detail.incidents.map((incident: any) => (
           <details key={incident.id}>
@@ -245,7 +215,7 @@ export default function UserDetailPanel({ detail, close, superAdmin, message, re
       ) : (
         <p>No incidents recorded.</p>
       )}
-      <h3>Administrative history</h3>
+      </div><div className="detail-section"><h3>Administrative history</h3>
       {detail.events.map((event: any) => (
         <div className="profile-row" key={event.id}>
           <span>
@@ -254,6 +224,7 @@ export default function UserDetailPanel({ detail, close, superAdmin, message, re
           <b>{event.details}</b>
         </div>
       ))}
+      </div>
     </div>
   );
 }
